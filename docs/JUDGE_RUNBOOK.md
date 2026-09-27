@@ -4,8 +4,8 @@ The target judge path is short, deterministic and evidence-first.
 
 ## A. Inspect the real GitHub fixture
 
-- Issue: https://github.com/Saidur-droid/CommitLedger/issues/1
-- Pull request: https://github.com/Saidur-droid/CommitLedger/pull/2
+- Issue: https://github.com/Saidur-droid/CommitLedger/issues/5
+- Pull request: https://github.com/Saidur-droid/CommitLedger/pull/6
 - The PR closes the issue through a real GitHub merge.
 - This is a competition evidence fixture, not a traction claim.
 
@@ -27,7 +27,7 @@ export GITHUB_TOKEN=...
 npm start
 ```
 
-The UI asks GitHub directly for PR #2 and prints canonical merge evidence plus its SHA-256 evidence hash.
+The UI asks GitHub directly for PR #6 and prints canonical merge evidence plus its SHA-256 evidence hash.
 
 ## C. Run Daml contract tests
 
@@ -65,7 +65,7 @@ The expected success proof is the JSON Ledger API response containing an update 
 Before competition submission, capture:
 - Daml build/test output;
 - Node test output;
-- PR #2 canonical GitHub evidence;
+- PR #6 canonical GitHub evidence;
 - Canton JSON Ledger API response;
 - active contract / final `SettlementReceipt` evidence;
 - one unauthorized transition failure;
