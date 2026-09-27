@@ -23,18 +23,42 @@
     <section class="hero">
       <p class="eyebrow">GITHUB EVIDENCE × DAML AUTHORIZATION × CANTON SETTLEMENT</p>
       <h1>Work is not settled until the proof is verifiable.</h1>
-      <p class="lead">CommitLedger turns a real GitHub issue into an authorized bounty lifecycle whose final receipt is recorded on Canton.</p>
-      <div class="flow" id="flow">
-        <span class="active">1 · Issue</span><b>→</b><span>2 · Bounty</span><b>→</b><span>3 · Claim</span><b>→</b><span>4 · PR</span><b>→</b><span>5 · Verify</span><b>→</b><span>6 · Settle</span>
+      <p class="lead">CommitLedger turns a real GitHub issue into a role-authorized bounty lifecycle and records the final evidence-bound receipt on Canton.</p>
+      <div class="flow">
+        <span>1 · Issue</span><b>→</b><span>2 · Bounty</span><b>→</b><span>3 · Claim</span><b>→</b><span>4 · PR</span><b>→</b><span>5 · Verify</span><b>→</b><span>6 · Settle</span>
       </div>
+    </section>
+
+    <section class="panel live-panel">
+      <div class="panel-head">
+        <div>
+          <p class="kicker">LIVE CANTON PROOF</p>
+          <h2>Run the complete six-step lifecycle</h2>
+        </div>
+        <span id="live-status" class="status">Checking runtime</span>
+      </div>
+      <p class="muted">This button performs real JSON Ledger API submissions. It is disabled until Canton package, three distinct parties, and authorized token(s) are configured.</p>
+      <form id="live-form">
+        <label>GitHub issue URL<input name="issueUrl" value="https://github.com/Saidur-droid/CommitLedger/issues/1" required></label>
+        <div class="row three">
+          <label>PR number<input name="prNumber" type="number" min="1" value="2" required></label>
+          <label>Contributor GitHub<input name="contributorGithub" value="Saidur-droid" required></label>
+          <label>Demo reward<input name="rewardAmount" type="number" min="1" value="100" required></label>
+        </div>
+        <button id="live-run" type="submit" disabled>Run live Canton lifecycle</button>
+      </form>
+      <div id="timeline" class="timeline">
+        <div class="timeline-empty">No Canton lifecycle has been executed in this session.</div>
+      </div>
+      <div id="receipt-card" class="receipt hidden"></div>
     </section>
 
     <section class="workspace">
       <article class="panel primary">
         <div class="panel-head">
           <div>
-            <p class="kicker">STEP 1 · REAL WORK SOURCE</p>
-            <h2>Create a bounty from a live GitHub issue</h2>
+            <p class="kicker">CANONICAL ISSUE</p>
+            <h2>Verify a real GitHub work source</h2>
           </div>
           <span id="issue-status" class="status">Waiting</span>
         </div>
@@ -46,16 +70,16 @@
           </div>
           <button type="submit">Verify issue & prepare bounty</button>
         </form>
-        <div id="bounty-summary" class="summary muted">A canonical GitHub issue will be read server-side. Browser-supplied title/repository are not trusted.</div>
+        <div id="bounty-summary" class="summary muted">GitHub is queried server-side. The browser cannot invent the repository, issue title, or issue state.</div>
       </article>
 
       <aside class="panel proof-card">
-        <p class="kicker">WHY CANTON MATTERS</p>
-        <h2>Authorization is the product.</h2>
-        <div class="metric"><strong>Maintainer</strong><span>creates bounty + settles</span></div>
-        <div class="metric"><strong>Contributor</strong><span>claims + submits work</span></div>
-        <div class="metric"><strong>Verifier</strong><span>attests canonical merge evidence</span></div>
-        <div class="metric"><strong>Canton</strong><span>records authorized state transitions</span></div>
+        <p class="kicker">ROLE SEPARATION</p>
+        <h2>Three parties. Three authorities.</h2>
+        <div class="metric"><strong>Maintainer</strong><span>creates, accepts, settles</span></div>
+        <div class="metric"><strong>Contributor</strong><span>claims, submits PR</span></div>
+        <div class="metric"><strong>Verifier</strong><span>attests merge evidence</span></div>
+        <div class="metric"><strong>Canton</strong><span>enforces every transition</span></div>
       </aside>
     </section>
 
@@ -63,8 +87,8 @@
       <article class="panel primary">
         <div class="panel-head">
           <div>
-            <p class="kicker">STEP 2 · CANONICAL MERGE EVIDENCE</p>
-            <h2>Verify the contributor pull request</h2>
+            <p class="kicker">CANONICAL MERGE</p>
+            <h2>Verify the exact merged pull request</h2>
           </div>
           <span id="github-status" class="status">Waiting</span>
         </div>
@@ -85,39 +109,27 @@
         <h2>The browser cannot award itself.</h2>
         <ul class="checks">
           <li>GitHub API is read server-side.</li>
-          <li>Repository and base branch are matched.</li>
-          <li>Contributor identity can be bound to PR author.</li>
-          <li>Head SHA is hashed into final evidence.</li>
+          <li>Repository, PR, branch and author are matched.</li>
+          <li>Head SHA is bound into SHA-256 evidence.</li>
+          <li>Daml independently checks the submitted evidence.</li>
         </ul>
       </aside>
     </section>
 
-    <section class="panel ledger-panel">
-      <div class="panel-head">
-        <div>
-          <p class="kicker">CANTON COMMAND PREVIEW</p>
-          <h2>Judge-inspectable ledger payload</h2>
-        </div>
-        <span id="ledger-status" class="status">Needs Canton config</span>
-      </div>
-      <p class="muted">Once the issue is verified, CommitLedger can build the exact Daml create command. With LocalNet configured, the same payload is submitted to Canton; there is no mocked “success” state.</p>
-      <pre id="ledger-output" class="output tall">Prepare a bounty to generate the Canton command.</pre>
-    </section>
-
     <section class="proof">
       <p class="kicker">JUDGE PROOF</p>
-      <h2>One product loop, five independently inspectable guarantees.</h2>
+      <h2>Every important claim leaves an inspectable artifact.</h2>
       <div class="proof-grid">
-        <div><strong>01</strong><span>Real source issue</span><p>Canonical GitHub provider state.</p></div>
-        <div><strong>02</strong><span>Role authorization</span><p>Daml choices enforce who can act.</p></div>
-        <div><strong>03</strong><span>Merge evidence</span><p>Exact repo, PR, branch and SHA.</p></div>
-        <div><strong>04</strong><span>Replay protection</span><p>Consuming settlement transition.</p></div>
-        <div><strong>05</strong><span>Receipt</span><p>Auditable final Canton state.</p></div>
+        <div><strong>01</strong><span>Real issue</span><p>Canonical GitHub provider state.</p></div>
+        <div><strong>02</strong><span>Contract IDs</span><p>One active contract at every stage.</p></div>
+        <div><strong>03</strong><span>Update IDs</span><p>Every Canton submission is traceable.</p></div>
+        <div><strong>04</strong><span>Evidence hash</span><p>Exact merged PR bound to settlement.</p></div>
+        <div><strong>05</strong><span>Receipt</span><p>Final auditable Canton contract.</p></div>
       </div>
     </section>
   </main>
 
-  <footer>CommitLedger · independent HackCanton competition build · DEMO_CREDIT is not real money</footer>
+  <footer>CommitLedger · independent HackCanton competition build · DEMO_CREDIT is non-production test value</footer>
   <script type="module" src="/app.js"></script>
 </body>
 </html>
