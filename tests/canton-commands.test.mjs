@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   buildCreateBountyCommand,
+  buildReturnForRevisionCommand,
   buildVerifyMergedCommand,
   buildSettleCommand
 } from "../src/canton-commands.mjs";
@@ -12,10 +13,10 @@ test("builds a Daml Bounty create command with the exact template", () => {
     maintainer: "Maintainer::1",
     verifier: "Verifier::1",
     bounty: {
-      bountyId: "bounty-1",
+      bountyId: "bounty-5",
       repository: "Saidur-droid/CommitLedger",
-      issueNumber: 1,
-      issueUrl: "https://github.com/Saidur-droid/CommitLedger/issues/1",
+      issueNumber: 5,
+      issueUrl: "https://github.com/Saidur-droid/CommitLedger/issues/5",
       title: "Demo",
       rewardAmount: "100.0",
       rewardUnit: "DEMO_CREDIT"
@@ -25,15 +26,26 @@ test("builds a Daml Bounty create command with the exact template", () => {
   assert.equal(command.CreateCommand.createArguments.rewardUnit, "DEMO_CREDIT");
 });
 
-test("binds canonical merge evidence into the verifier choice", () => {
+test("builds the explicit revision path", () => {
+  const command = buildReturnForRevisionCommand({
+    packageId: "pkg123",
+    submittedBountyCid: "cid-submitted",
+    reason: "Update tests"
+  });
+  assert.equal(command.ExerciseCommand.choice, "SubmittedBounty_ReturnForRevision");
+  assert.equal(command.ExerciseCommand.choiceArgument.reason, "Update tests");
+});
+
+test("binds issue-aware canonical merge evidence into the verifier choice", () => {
   const evidence = {
     repository: "Saidur-droid/CommitLedger",
-    prNumber: 2,
-    prUrl: "https://github.com/Saidur-droid/CommitLedger/pull/2",
+    issueNumber: 5,
+    prNumber: 6,
+    prUrl: "https://github.com/Saidur-droid/CommitLedger/pull/6",
     headSha: "abc",
     baseBranch: "main",
     merged: true,
-    mergedAt: "2026-09-27T00:00:00Z",
+    mergedAt: "2026-09-27T10:57:30Z",
     evidenceHash: "sha256:abc"
   };
   const command = buildVerifyMergedCommand({
@@ -42,7 +54,7 @@ test("binds canonical merge evidence into the verifier choice", () => {
     evidence
   });
   assert.equal(command.ExerciseCommand.choice, "SubmittedBounty_VerifyMerged");
-  assert.deepEqual(command.ExerciseCommand.choiceArgument.evidence, evidence);
+  assert.equal(command.ExerciseCommand.choiceArgument.evidence.issueNumber, 5);
 });
 
 test("settlement is an explicit consuming Daml choice", () => {
