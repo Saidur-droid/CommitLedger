@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  node-verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+
+  repository-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Required competition files exist
+        run: |
+          test -f LOCKED_DECISIONS.md
+          test -f docs/COMPETITION_COMPLIANCE.md
+          test -f docs/WINNING_STANDARD.md
+          test -f daml/daml/CommitLedger.daml
+          test -f daml/daml/Test.daml
+      - name: No paid-hosting dependencies
+        run: |
+          ! grep -RniE 'vercel|supabase' --exclude='LOCKED_DECISIONS.md' --exclude='COMPETITION_COMPLIANCE.md' . || {
+            echo "Paid/forbidden hosting dependency reference detected"
+            exit 1
+          }
