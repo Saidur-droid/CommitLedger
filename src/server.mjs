@@ -2,7 +2,16 @@ import http from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { fetchVerifiedPullRequest } from "./github-verifier.mjs";
+import { fetchGitHubIssue, fetchVerifiedPullRequest } from "./github-verifier.mjs";
+import { validateBountyDraft } from "./domain.mjs";
+import {
+  buildCreateBountyCommand,
+  buildClaimRequestCommand,
+  buildAcceptClaimCommand,
+  buildSubmitPullRequestCommand,
+  buildVerifyMergedCommand,
+  buildSettleCommand
+} from "./canton-commands.mjs";
 import { CantonJsonApi } from "./canton-json-api.mjs";
 
 const root = fileURLToPath(new URL("../web/", import.meta.url));
@@ -49,6 +58,25 @@ async function serveStatic(urlPath, res) {
   }
 }
 
+function cantonApi() {
+  if (!process.env.CANTON_JSON_API_URL || !process.env.CANTON_TOKEN) return null;
+  return new CantonJsonApi({
+    baseUrl: process.env.CANTON_JSON_API_URL,
+    token: process.env.CANTON_TOKEN
+  });
+}
+
+async function submitCanton(command, actAs, workflowId) {
+  const api = cantonApi();
+  if (!api) throw new Error("Canton LocalNet is not configured");
+  return api.submitAndWait({
+    commands: [command],
+    actAs,
+    workflowId,
+    commandId: `commitledger-${workflowId}-${Date.now()}`
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
@@ -57,9 +85,24 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         service: "CommitLedger",
-        cantonConfigured: Boolean(process.env.CANTON_JSON_API_URL && process.env.CANTON_TOKEN),
-        githubAuthenticated: Boolean(process.env.GITHUB_TOKEN)
+        cantonConfigured: Boolean(cantonApi()),
+        githubAuthenticated: Boolean(process.env.GITHUB_TOKEN),
+        packageConfigured: Boolean(process.env.CANTON_PACKAGE_ID)
       });
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/bounty/prepare") {
+      const input = await readJson(req);
+      const issue = await fetchGitHubIssue({ issueUrl: input.issueUrl, token: process.env.GITHUB_TOKEN });
+      const bounty = validateBountyDraft({
+        repository: issue.repository,
+        issueNumber: issue.issueNumber,
+        issueUrl: issue.issueUrl,
+        title: input.title || issue.title,
+        rewardAmount: input.rewardAmount,
+        rewardUnit: "DEMO_CREDIT"
+      });
+      return json(res, 200, { ok: true, issue, bounty });
     }
 
     if (req.method === "POST" && url.pathname === "/api/github/verify") {
@@ -77,29 +120,47 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, evidence });
     }
 
-    if (req.method === "POST" && url.pathname === "/api/canton/submit") {
-      if (!process.env.CANTON_JSON_API_URL || !process.env.CANTON_TOKEN) {
-        return json(res, 503, { error: "Canton LocalNet is not configured" });
-      }
+    if (req.method === "POST" && url.pathname === "/api/canton/build-command") {
       const input = await readJson(req);
-      const api = new CantonJsonApi({
-        baseUrl: process.env.CANTON_JSON_API_URL,
-        token: process.env.CANTON_TOKEN
-      });
-      const result = await api.submitAndWait({
-        commands: input.commands,
-        actAs: input.actAs,
-        readAs: input.readAs || [],
-        workflowId: input.workflowId || "commitledger-web",
-        commandId: input.commandId || `commitledger-${Date.now()}`
-      });
+      const packageId = input.packageId || process.env.CANTON_PACKAGE_ID;
+      if (!packageId) throw new Error("CANTON_PACKAGE_ID is required");
+      let command;
+      switch (input.action) {
+        case "createBounty":
+          command = buildCreateBountyCommand({ packageId, ...input.payload });
+          break;
+        case "claimRequest":
+          command = buildClaimRequestCommand({ packageId, ...input.payload });
+          break;
+        case "acceptClaim":
+          command = buildAcceptClaimCommand({ packageId, ...input.payload });
+          break;
+        case "submitPullRequest":
+          command = buildSubmitPullRequestCommand({ packageId, ...input.payload });
+          break;
+        case "verifyMerged":
+          command = buildVerifyMergedCommand({ packageId, ...input.payload });
+          break;
+        case "settle":
+          command = buildSettleCommand({ packageId, ...input.payload });
+          break;
+        default:
+          throw new Error("Unknown Canton action");
+      }
+      return json(res, 200, { ok: true, command });
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/canton/submit-command") {
+      const input = await readJson(req);
+      const result = await submitCanton(input.command, input.actAs, input.workflowId || "web");
       return json(res, 200, { ok: true, result });
     }
 
     if (req.method === "GET") return serveStatic(url.pathname, res);
     json(res, 405, { error: "method not allowed" });
   } catch (error) {
-    json(res, 400, { error: error.message });
+    const status = /not configured|required|invalid|mismatch|must|Unknown/.test(error.message) ? 400 : 500;
+    json(res, status, { error: error.message });
   }
 });
 
