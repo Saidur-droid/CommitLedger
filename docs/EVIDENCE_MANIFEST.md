@@ -2,9 +2,9 @@
 
 ## Already created
 
-- Real GitHub issue #1.
+- Real GitHub issue #5.
 - Real GitHub pull request #2.
-- PR #2 merged through GitHub.
+- PR #6 merged through GitHub.
 - Daml contract source implementing the full authorization lifecycle.
 - Daml negative-test source for unauthorized verification, bad evidence, unauthorized settlement and replay.
 - Canonical GitHub API verifier with SHA-256 evidence hashing.
