@@ -15,6 +15,7 @@ data GitHubPullRequestRef = GitHubPullRequestRef
 data MergeEvidence = MergeEvidence
   with
     repository : Text
+    issueNumber : Int
     prNumber : Int
     prUrl : Text
     headSha : Text
@@ -169,6 +170,7 @@ template SubmittedBounty
       do
         assertMsg "GitHub evidence must report a merged pull request" evidence.merged
         assertMsg "evidence repository mismatch" (evidence.repository == pullRequest.repository)
+        assertMsg "evidence issue number mismatch" (evidence.issueNumber == issueNumber)
         assertMsg "evidence PR number mismatch" (evidence.prNumber == pullRequest.prNumber)
         assertMsg "evidence URL mismatch" (evidence.prUrl == pullRequest.prUrl)
         assertMsg "evidence head SHA mismatch" (evidence.headSha == pullRequest.headSha)
