@@ -16,8 +16,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
-      - run: npm ci --ignore-scripts
       - run: npm test
 
   repository-gates:
@@ -31,9 +29,12 @@ jobs:
           test -f docs/WINNING_STANDARD.md
           test -f daml/daml/CommitLedger.daml
           test -f daml/daml/Test.daml
-      - name: No paid-hosting dependencies
+          test -f src/github-verifier.mjs
+          test -f src/canton-json-api.mjs
+          test -f web/index.html
+      - name: No forbidden runtime dependencies
         run: |
-          ! grep -RniE 'vercel|supabase' --exclude='LOCKED_DECISIONS.md' --exclude='COMPETITION_COMPLIANCE.md' . || {
-            echo "Paid/forbidden hosting dependency reference detected"
+          ! grep -RniE 'vercel|supabase' package.json src web scripts daml || {
+            echo "Forbidden runtime dependency reference detected"
             exit 1
           }
