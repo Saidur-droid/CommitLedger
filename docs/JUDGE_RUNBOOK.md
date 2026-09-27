@@ -1,15 +1,16 @@
 # Judge Runbook
 
-The target judge path is short, deterministic and evidence-first.
+The target judge path is short, reproducible, and evidence-first.
 
 ## A. Inspect the real GitHub fixture
 
-- Issue: https://github.com/Saidur-droid/CommitLedger/issues/5
-- Pull request: https://github.com/Saidur-droid/CommitLedger/pull/6
-- The PR closes the issue through a real GitHub merge.
-- This is a competition evidence fixture, not a traction claim.
+- Open bounty source: https://github.com/Saidur-droid/CommitLedger/issues/5
+- Merged pull request: https://github.com/Saidur-droid/CommitLedger/pull/6
+- PR #6 explicitly references issue #5 but intentionally does **not** close it.
+- This keeps the source issue valid for repeatable bounty-creation demos.
+- This is competition/demo evidence, not a traction claim.
 
-## B. Run the zero-dependency verifier
+## B. Run local verification
 
 Requirements: Node.js 22+.
 
@@ -20,55 +21,99 @@ npm start
 
 Open `http://127.0.0.1:4173`.
 
-For a private repository, export a GitHub token with read access before starting:
+If this repository is private, export a GitHub token with read access:
 
 ```bash
 export GITHUB_TOKEN=...
 npm start
 ```
 
-The UI asks GitHub directly for PR #6 and prints canonical merge evidence plus its SHA-256 evidence hash.
+The canonical verifier checks repository, PR number, author, base branch, merged state, and the exact reference to issue #5. The issue number is included in the SHA-256 merge evidence.
 
 ## C. Run Daml contract tests
 
-The Daml project is in `daml/` and targets SDK 3.5.2.
+The Daml project is in `daml/` and is pinned to the stable open-source DPM SDK bundle **3.5.12**.
 
-Using the supported Daml/DPM toolchain, build/test the project from that directory. The tests cover:
+```bash
+bash scripts/bootstrap-dpm.sh
+bash scripts/verify-all.sh
+```
+
+Daml tests cover:
 - happy path;
+- explicit revision / resubmission;
 - unauthorized verifier;
 - unmerged evidence;
+- wrong head SHA;
+- wrong bounty issue number;
 - unauthorized settlement;
 - duplicate settlement replay.
 
-## D. Connect to Canton LocalNet
-
-The repository follows the Canton Network Quickstart JSON Ledger API pattern. Configure:
+## D. Configure three Canton roles
 
 ```bash
-cp .env.example .env
 export CANTON_JSON_API_URL=http://localhost:3975
-export CANTON_TOKEN=...
-export CANTON_ACT_AS=...
 export CANTON_PACKAGE_ID=...
+export CANTON_MAINTAINER_PARTY=...
+export CANTON_CONTRIBUTOR_PARTY=...
+export CANTON_VERIFIER_PARTY=...
 ```
 
-Then submit a real Bounty create command:
+For LocalNet, one token with rights for all demo parties may be used:
 
 ```bash
-bash scripts/create-demo-bounty.sh
+export CANTON_TOKEN=...
 ```
 
-The expected success proof is the JSON Ledger API response containing an update identifier/completion result and an active `Bounty` contract visible from the configured participant.
+Or use role-specific tokens:
 
-## E. Final evidence capture
+```bash
+export CANTON_MAINTAINER_TOKEN=...
+export CANTON_CONTRIBUTOR_TOKEN=...
+export CANTON_VERIFIER_TOKEN=...
+```
 
-Before competition submission, capture:
+## E. Run the full real lifecycle
+
+```bash
+npm run demo:full
+```
+
+The runner performs:
+
+`Issue #5 -> Bounty -> ClaimRequest -> ClaimedBounty -> SubmittedBounty -> VerifiedBounty -> SettlementReceipt`
+
+For every Canton transition it captures:
+- `updateId`;
+- `completionOffset`;
+- active `contractId`;
+- template and create argument.
+
+The final proof bundle contains the GitHub evidence hash and the active `SettlementReceipt`.
+
+To persist the evidence bundle:
+
+```bash
+export COMMITLEDGER_EVIDENCE_FILE=./commitledger-evidence.json
+npm run demo:full
+```
+
+## F. UI judge path
+
+Run `npm start`, open the local app, and use **Run live Canton lifecycle**.
+
+The button remains disabled until package, three distinct parties, and token configuration are present. The UI never fabricates a green Canton state.
+
+## Final evidence capture
+
+Before submission capture:
 - Daml build/test output;
 - Node test output;
-- PR #6 canonical GitHub evidence;
-- Canton JSON Ledger API response;
-- active contract / final `SettlementReceipt` evidence;
-- one unauthorized transition failure;
-- one duplicate-settlement failure.
+- issue #5 + PR #6 canonical GitHub evidence;
+- each Canton update ID and contract ID;
+- final `SettlementReceipt`;
+- one authorization failure;
+- duplicate-settlement failure;
+- final demo video.
 
-Do not call the project fully verified until those runtime artifacts are captured.
+Do not call the project fully runtime-verified until these artifacts exist.
