@@ -1,8 +1,8 @@
 import { writeFile } from "node:fs/promises";
 import { runtimeConfigFromEnv, runFullLifecycle } from "./orchestrator.mjs";
 
-const issueUrl = process.env.COMMITLEDGER_ISSUE_URL || "https://github.com/Saidur-droid/CommitLedger/issues/1";
-const prNumber = Number(process.env.COMMITLEDGER_PR_NUMBER || "2");
+const issueUrl = process.env.COMMITLEDGER_ISSUE_URL || "https://github.com/Saidur-droid/CommitLedger/issues/5";
+const prNumber = Number(process.env.COMMITLEDGER_PR_NUMBER || "6");
 const contributorGithub = process.env.COMMITLEDGER_CONTRIBUTOR_GITHUB || "Saidur-droid";
 const rewardAmount = Number(process.env.COMMITLEDGER_REWARD_AMOUNT || "100");
 const baseBranch = process.env.COMMITLEDGER_BASE_BRANCH || "main";
