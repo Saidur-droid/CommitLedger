@@ -2,6 +2,7 @@ export const bountyStates = Object.freeze([
   "DRAFT",
   "ISSUE_VERIFIED",
   "BOUNTY_ON_LEDGER",
+  "CLAIM_REQUESTED",
   "CLAIMED",
   "PR_SUBMITTED",
   "VERIFIED",
@@ -10,10 +11,11 @@ export const bountyStates = Object.freeze([
 ]);
 
 const transitions = Object.freeze({
-  DRAFT: ["ISSUE_VERIFIED", "CANCELLED"],
-  ISSUE_VERIFIED: ["BOUNTY_ON_LEDGER", "CANCELLED"],
-  BOUNTY_ON_LEDGER: ["CLAIMED", "CANCELLED"],
-  CLAIMED: ["PR_SUBMITTED", "CANCELLED"],
+  DRAFT: ["ISSUE_VERIFIED"],
+  ISSUE_VERIFIED: ["BOUNTY_ON_LEDGER"],
+  BOUNTY_ON_LEDGER: ["CLAIM_REQUESTED", "CANCELLED"],
+  CLAIM_REQUESTED: ["CLAIMED", "BOUNTY_ON_LEDGER"],
+  CLAIMED: ["PR_SUBMITTED"],
   PR_SUBMITTED: ["VERIFIED", "CLAIMED"],
   VERIFIED: ["SETTLED"],
   SETTLED: [],
@@ -28,6 +30,13 @@ export function assertTransition(from, to) {
   if (!bountyStates.includes(from)) throw new Error(`unknown state: ${from}`);
   if (!bountyStates.includes(to)) throw new Error(`unknown state: ${to}`);
   if (!canTransition(from, to)) throw new Error(`invalid transition: ${from} -> ${to}`);
+}
+
+export function assertDistinctParties({ maintainer, contributor, verifier }) {
+  const parties = [maintainer, contributor, verifier].map(value => String(value || "").trim());
+  if (parties.some(value => !value)) throw new Error("maintainer, contributor and verifier parties are required");
+  if (new Set(parties).size !== 3) throw new Error("maintainer, contributor and verifier must be distinct Canton parties");
+  return { maintainer: parties[0], contributor: parties[1], verifier: parties[2] };
 }
 
 export function normalizeRepository(value) {
