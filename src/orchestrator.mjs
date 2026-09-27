@@ -40,6 +40,15 @@ function roleClient(baseUrl, token) {
   return new CantonJsonApi({ baseUrl, token });
 }
 
+async function expectLedgerFailure(name, action) {
+  try {
+    await action();
+  } catch (error) {
+    return { name, rejected: true, error: error.message };
+  }
+  throw new Error(`Expected Canton rejection did not occur: ${name}`);
+}
+
 async function submitAndFind({
   client,
   command,
@@ -111,6 +120,7 @@ export async function runFullLifecycle({
     bounty,
     parties,
     steps: [],
+    negativeChecks: [],
     mergeEvidence: null,
     settlementReceipt: null
   };
@@ -198,6 +208,20 @@ export async function runFullLifecycle({
   });
   proof.steps.push(proofStep("PR_SUBMITTED", submitted.submission, submitted.event));
 
+  proof.negativeChecks.push(await expectLedgerFailure(
+    "wrong issue evidence rejected",
+    () => verifierApi.submitAndWait({
+      commands: [buildVerifyMergedCommand({
+        packageId,
+        submittedBountyCid: submitted.event.contractId,
+        evidence: { ...evidence, issueNumber: evidence.issueNumber + 1000 }
+      })],
+      actAs: [parties.verifier],
+      workflowId: "commitledger-negative-wrong-issue",
+      commandId: `negative-wrong-issue-${Date.now()}`
+    })
+  ));
+
   const verified = await submitAndFind({
     client: verifierApi,
     command: buildVerifyMergedCommand({
@@ -215,6 +239,21 @@ export async function runFullLifecycle({
 
   const settledAt = now().toISOString();
   const settlementRef = `github:${evidence.repository}#${evidence.prNumber}:${evidence.evidenceHash.slice(7, 19)}`;
+  proof.negativeChecks.push(await expectLedgerFailure(
+    "unauthorized contributor settlement rejected",
+    () => contributorApi.submitAndWait({
+      commands: [buildSettleCommand({
+        packageId,
+        verifiedBountyCid: verified.event.contractId,
+        settledAt,
+        settlementRef: "unauthorized-attempt"
+      })],
+      actAs: [parties.contributor],
+      workflowId: "commitledger-negative-unauthorized-settle",
+      commandId: `negative-unauthorized-settle-${Date.now()}`
+    })
+  ));
+
   const settled = await submitAndFind({
     client: maintainerApi,
     command: buildSettleCommand({
@@ -231,6 +270,21 @@ export async function runFullLifecycle({
   });
   proof.steps.push(proofStep("SETTLED", settled.submission, settled.event));
   proof.settlementReceipt = settled.event.createArgument;
+
+  proof.negativeChecks.push(await expectLedgerFailure(
+    "duplicate settlement rejected",
+    () => maintainerApi.submitAndWait({
+      commands: [buildSettleCommand({
+        packageId,
+        verifiedBountyCid: verified.event.contractId,
+        settledAt,
+        settlementRef: "duplicate-attempt"
+      })],
+      actAs: [parties.maintainer],
+      workflowId: "commitledger-negative-duplicate-settle",
+      commandId: `negative-duplicate-settle-${Date.now()}`
+    })
+  ));
 
   return proof;
 }
