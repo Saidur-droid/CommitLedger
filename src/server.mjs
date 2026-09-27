@@ -9,10 +9,12 @@ import {
   buildClaimRequestCommand,
   buildAcceptClaimCommand,
   buildSubmitPullRequestCommand,
+  buildReturnForRevisionCommand,
   buildVerifyMergedCommand,
   buildSettleCommand
 } from "./canton-commands.mjs";
 import { CantonJsonApi } from "./canton-json-api.mjs";
+import { runtimeConfigFromEnv, runFullLifecycle } from "./orchestrator.mjs";
 
 const root = fileURLToPath(new URL("../web/", import.meta.url));
 const port = Number(process.env.PORT || 4173);
@@ -58,12 +60,29 @@ async function serveStatic(urlPath, res) {
   }
 }
 
+function cantonConfigured() {
+  return Boolean(process.env.CANTON_JSON_API_URL && (process.env.CANTON_TOKEN || process.env.CANTON_MAINTAINER_TOKEN));
+}
+
+function lifecycleConfigured() {
+  return Boolean(
+    process.env.CANTON_JSON_API_URL &&
+    process.env.CANTON_PACKAGE_ID &&
+    process.env.CANTON_MAINTAINER_PARTY &&
+    process.env.CANTON_CONTRIBUTOR_PARTY &&
+    process.env.CANTON_VERIFIER_PARTY &&
+    (process.env.CANTON_TOKEN || (
+      process.env.CANTON_MAINTAINER_TOKEN &&
+      process.env.CANTON_CONTRIBUTOR_TOKEN &&
+      process.env.CANTON_VERIFIER_TOKEN
+    ))
+  );
+}
+
 function cantonApi() {
-  if (!process.env.CANTON_JSON_API_URL || !process.env.CANTON_TOKEN) return null;
-  return new CantonJsonApi({
-    baseUrl: process.env.CANTON_JSON_API_URL,
-    token: process.env.CANTON_TOKEN
-  });
+  const token = process.env.CANTON_TOKEN || process.env.CANTON_MAINTAINER_TOKEN;
+  if (!process.env.CANTON_JSON_API_URL || !token) return null;
+  return new CantonJsonApi({ baseUrl: process.env.CANTON_JSON_API_URL, token });
 }
 
 async function submitCanton(command, actAs, workflowId) {
@@ -85,7 +104,8 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         service: "CommitLedger",
-        cantonConfigured: Boolean(cantonApi()),
+        cantonConfigured: cantonConfigured(),
+        lifecycleConfigured: lifecycleConfigured(),
         githubAuthenticated: Boolean(process.env.GITHUB_TOKEN),
         packageConfigured: Boolean(process.env.CANTON_PACKAGE_ID)
       });
@@ -120,6 +140,23 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, evidence });
     }
 
+    if (req.method === "POST" && url.pathname === "/api/demo/run") {
+      if (!lifecycleConfigured()) {
+        return json(res, 503, { error: "Full Canton lifecycle is not configured. Set package, party and token environment variables." });
+      }
+      const input = await readJson(req);
+      const proof = await runFullLifecycle({
+        runtime: runtimeConfigFromEnv(),
+        issueUrl: input.issueUrl,
+        rewardAmount: Number(input.rewardAmount || 100),
+        contributorGithub: input.contributorGithub,
+        prNumber: Number(input.prNumber),
+        baseBranch: input.baseBranch || "main",
+        githubToken: process.env.GITHUB_TOKEN || ""
+      });
+      return json(res, 200, { ok: true, proof });
+    }
+
     if (req.method === "POST" && url.pathname === "/api/canton/build-command") {
       const input = await readJson(req);
       const packageId = input.packageId || process.env.CANTON_PACKAGE_ID;
@@ -137,6 +174,9 @@ const server = http.createServer(async (req, res) => {
           break;
         case "submitPullRequest":
           command = buildSubmitPullRequestCommand({ packageId, ...input.payload });
+          break;
+        case "returnForRevision":
+          command = buildReturnForRevisionCommand({ packageId, ...input.payload });
           break;
         case "verifyMerged":
           command = buildVerifyMergedCommand({ packageId, ...input.payload });
@@ -159,7 +199,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET") return serveStatic(url.pathname, res);
     json(res, 405, { error: "method not allowed" });
   } catch (error) {
-    const status = /not configured|required|invalid|mismatch|must|Unknown/.test(error.message) ? 400 : 500;
+    const status = /not configured|required|invalid|mismatch|must|Unknown|distinct/.test(error.message) ? 400 : 500;
     json(res, status, { error: error.message });
   }
 });
