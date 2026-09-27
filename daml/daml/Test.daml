@@ -44,6 +44,7 @@ mkPullRequest = GitHubPullRequestRef with
 mkEvidence : MergeEvidence
 mkEvidence = MergeEvidence with
   repository = "Saidur-droid/CommitLedger"
+  issueNumber = 1
   prNumber = 7
   prUrl = "https://github.com/Saidur-droid/CommitLedger/pull/7"
   headSha = "abc123"
@@ -124,6 +125,9 @@ testBadEvidenceFails = do
   submitMustFail verifier do
     exerciseCmd submittedCid SubmittedBounty_VerifyMerged with
       evidence = mkEvidence with headSha = "different-sha"
+  submitMustFail verifier do
+    exerciseCmd submittedCid SubmittedBounty_VerifyMerged with
+      evidence = mkEvidence with issueNumber = 999
 
 testSettlementAuthorizationAndReplayProtection : Script ()
 testSettlementAuthorizationAndReplayProtection = do
