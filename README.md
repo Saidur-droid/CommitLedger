@@ -17,7 +17,7 @@ Canton is the trust and settlement layer, not a cosmetic integration. Daml contr
 - Canonical GitHub PR verifier with SHA-256 evidence hashing.
 - Canton JSON Ledger API client and demo bounty command.
 - Local zero-dependency Node web app with judge-facing verification UI.
-- Real GitHub evidence fixture: issue #1 -> PR #2 -> merged.
+- Real GitHub evidence fixture: issue #5 -> PR #6 -> merged.
 - Competition compliance, architecture, threat model, runbook and evidence gates.
 - No Vercel, Supabase or paid API dependency.
 - No fake users, fake traction or real-money claims.
@@ -33,7 +33,7 @@ npm start
 
 Open `http://127.0.0.1:4173`.
 
-If this repository is private, set `GITHUB_TOKEN` with read access so the UI can verify PR #2.
+If this repository is private, set `GITHUB_TOKEN` with read access so the UI can verify PR #6.
 
 ## Canton / Daml
 
