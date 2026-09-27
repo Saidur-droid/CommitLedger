@@ -169,7 +169,8 @@ export async function runFullLifecycle({
     token: githubToken,
     expected: {
       baseBranch,
-      contributorGithub
+      contributorGithub,
+      issueNumber: bounty.issueNumber
     }
   });
   proof.mergeEvidence = evidence;
