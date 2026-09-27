@@ -65,18 +65,12 @@ function cantonConfigured() {
 }
 
 function lifecycleConfigured() {
-  return Boolean(
-    process.env.CANTON_JSON_API_URL &&
-    process.env.CANTON_PACKAGE_ID &&
-    process.env.CANTON_MAINTAINER_PARTY &&
-    process.env.CANTON_CONTRIBUTOR_PARTY &&
-    process.env.CANTON_VERIFIER_PARTY &&
-    (process.env.CANTON_TOKEN || (
-      process.env.CANTON_MAINTAINER_TOKEN &&
-      process.env.CANTON_CONTRIBUTOR_TOKEN &&
-      process.env.CANTON_VERIFIER_TOKEN
-    ))
-  );
+  try {
+    runtimeConfigFromEnv();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function cantonApi() {
