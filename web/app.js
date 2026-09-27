@@ -92,6 +92,7 @@ verifyForm.addEventListener("submit", async (event) => {
   githubStatus.textContent = "Verifying";
   githubOutput.textContent = "Reading canonical GitHub pull request…";
   const values = Object.fromEntries(new FormData(verifyForm));
+  values.issueNumber = Number(values.issueNumber);
   values.prNumber = Number(values.prNumber);
   try {
     const data = await request("/api/github/verify", {
@@ -132,6 +133,7 @@ function renderReceipt(proof) {
       <div><span>Evidence</span><strong>${escapeHtml(shortId(receipt.evidenceHash || ""))}</strong></div>
       <div><span>Settlement ref</span><strong>${escapeHtml(receipt.settlementRef || "")}</strong></div>
       <div><span>Canton proof</span><strong>${proof.steps.length} committed transitions</strong></div>
+      <div><span>Negative checks</span><strong>${proof.negativeChecks?.filter(check => check.rejected).length || 0} enforced rejections</strong></div>
     </div>
   `;
 }
