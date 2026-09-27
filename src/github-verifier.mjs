@@ -1,5 +1,59 @@
 import crypto from "node:crypto";
 
+function githubHeaders(token) {
+  const headers = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    "User-Agent": "CommitLedger"
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
+export function parseGitHubIssueUrl(value) {
+  let url;
+  try {
+    url = new URL(String(value || "").trim());
+  } catch {
+    throw new Error("Enter a valid GitHub issue URL");
+  }
+  if (!["github.com", "www.github.com"].includes(url.hostname)) throw new Error("Issue URL must point to github.com");
+  const parts = url.pathname.split("/").filter(Boolean);
+  if (parts.length !== 4 || parts[2] !== "issues") throw new Error("Use github.com/owner/repo/issues/123");
+  const issueNumber = Number(parts[3]);
+  if (!Number.isInteger(issueNumber) || issueNumber <= 0) throw new Error("Invalid GitHub issue number");
+  return { owner: parts[0], repo: parts[1], repository: `${parts[0]}/${parts[1]}`, issueNumber };
+}
+
+export function normalizeIssue(payload, repository) {
+  if (!payload || typeof payload !== "object") throw new Error("GitHub issue payload is required");
+  if (payload.pull_request) throw new Error("That URL points to a pull request, not an issue");
+  if (!Number.isInteger(payload.number) || !payload.html_url || !payload.title) {
+    throw new Error("Incomplete GitHub issue payload");
+  }
+  return {
+    repository,
+    issueNumber: payload.number,
+    issueUrl: payload.html_url,
+    title: payload.title,
+    state: payload.state,
+    author: payload.user?.login ?? "",
+    body: payload.body ?? ""
+  };
+}
+
+export async function fetchGitHubIssue({ issueUrl, token }) {
+  const parsed = parseGitHubIssueUrl(issueUrl);
+  const response = await fetch(
+    `https://api.github.com/repos/${encodeURIComponent(parsed.owner)}/${encodeURIComponent(parsed.repo)}/issues/${parsed.issueNumber}`,
+    { headers: githubHeaders(token) }
+  );
+  if (!response.ok) throw new Error(`GitHub issue lookup failed: ${response.status} ${response.statusText}`);
+  const issue = normalizeIssue(await response.json(), parsed.repository);
+  if (issue.state !== "open") throw new Error("Bounty source issue must be open");
+  return issue;
+}
+
 export function normalizePullRequest(payload) {
   if (!payload || typeof payload !== "object") throw new Error("GitHub payload is required");
   const repository = payload.base?.repo?.full_name;
@@ -19,7 +73,7 @@ export function normalizePullRequest(payload) {
 }
 
 export function assertExpectedPullRequest(pr, expected) {
-  if (pr.repository !== expected.repository) throw new Error("repository mismatch");
+  if (pr.repository.toLowerCase() !== expected.repository.toLowerCase()) throw new Error("repository mismatch");
   if (pr.prNumber !== expected.prNumber) throw new Error("pull request number mismatch");
   if (expected.headSha && pr.headSha !== expected.headSha) throw new Error("head SHA mismatch");
   if (expected.baseBranch && pr.baseBranch !== expected.baseBranch) throw new Error("base branch mismatch");
@@ -54,20 +108,12 @@ export function buildMergeEvidence(pr) {
 }
 
 export async function fetchVerifiedPullRequest({ repository, prNumber, token, expected = {} }) {
-  const headers = {
-    Accept: "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28",
-    "User-Agent": "CommitLedger"
-  };
-  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await fetch(`https://api.github.com/repos/${repository}/pulls/${prNumber}`, {
+    headers: githubHeaders(token)
+  });
+  if (!response.ok) throw new Error(`GitHub API failed: ${response.status} ${response.statusText}`);
 
-  const response = await fetch(`https://api.github.com/repos/${repository}/pulls/${prNumber}`, { headers });
-  if (!response.ok) {
-    throw new Error(`GitHub API failed: ${response.status} ${response.statusText}`);
-  }
-
-  const payload = await response.json();
-  const pr = normalizePullRequest(payload);
+  const pr = normalizePullRequest(await response.json());
   assertExpectedPullRequest(pr, { repository, prNumber, ...expected });
   return buildMergeEvidence(pr);
 }

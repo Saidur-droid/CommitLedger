@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizePullRequest, assertExpectedPullRequest, buildMergeEvidence } from "../src/github-verifier.mjs";
+import {
+  parseGitHubIssueUrl,
+  normalizeIssue,
+  normalizePullRequest,
+  assertExpectedPullRequest,
+  buildMergeEvidence
+} from "../src/github-verifier.mjs";
 
 const payload = {
   number: 7,
@@ -12,10 +18,37 @@ const payload = {
   base: { ref: "main", repo: { full_name: "Saidur-droid/CommitLedger" } }
 };
 
+test("parses and normalizes a real GitHub issue reference", () => {
+  const parsed = parseGitHubIssueUrl("https://github.com/Saidur-droid/CommitLedger/issues/1");
+  assert.equal(parsed.repository, "Saidur-droid/CommitLedger");
+  assert.equal(parsed.issueNumber, 1);
+
+  const issue = normalizeIssue({
+    number: 1,
+    html_url: "https://github.com/Saidur-droid/CommitLedger/issues/1",
+    title: "Competition evidence fixture",
+    state: "open",
+    user: { login: "Saidur-droid" },
+    body: "proof"
+  }, parsed.repository);
+  assert.equal(issue.state, "open");
+  assert.equal(issue.title, "Competition evidence fixture");
+});
+
+test("rejects a pull request masquerading as an issue", () => {
+  assert.throws(() => normalizeIssue({
+    number: 2,
+    html_url: "https://github.com/Saidur-droid/CommitLedger/pull/2",
+    title: "PR",
+    state: "open",
+    pull_request: {}
+  }, "Saidur-droid/CommitLedger"), /pull request/);
+});
+
 test("normalizes and validates exact merged PR evidence", () => {
   const pr = normalizePullRequest(payload);
   assertExpectedPullRequest(pr, {
-    repository: "Saidur-droid/CommitLedger",
+    repository: "saidur-droid/commitledger",
     prNumber: 7,
     headSha: "abc123",
     baseBranch: "main",
