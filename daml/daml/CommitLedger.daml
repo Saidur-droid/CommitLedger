@@ -138,8 +138,8 @@ template SubmittedBounty
     rewardUnit : Text
     pullRequest : GitHubPullRequestRef
   where
-    signatory maintainer
-    observer contributor, verifier
+    signatory contributor
+    observer maintainer, verifier
 
     -- A maintainer can return the exact submitted PR for revision.
     -- The reason is preserved as the exercise argument in the Canton transaction.
@@ -206,8 +206,8 @@ template VerifiedBounty
     pullRequest : GitHubPullRequestRef
     evidence : MergeEvidence
   where
-    signatory maintainer
-    observer contributor, verifier
+    signatory verifier
+    observer maintainer, contributor
 
     choice VerifiedBounty_Settle : ContractId SettlementReceipt
       with
