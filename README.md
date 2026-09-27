@@ -37,7 +37,7 @@ If this repository is private, set `GITHUB_TOKEN` with read access so the UI can
 
 ## Canton / Daml
 
-The Daml project is under `daml/` and targets SDK 3.5.2, matching the current Canton Network Quickstart line used during implementation.
+The Daml project is under `daml/` and is pinned to the stable open-source DPM SDK bundle 3.5.12.
 
 See:
 - [Locked decisions](LOCKED_DECISIONS.md)
@@ -52,3 +52,19 @@ See:
 ## Integrity
 
 `DEMO_CREDIT` is a non-production test unit. CommitLedger does not claim Canton Coin transfer, fiat settlement, external adoption, or mainnet usage unless those are actually demonstrated and captured as evidence.
+
+
+## One-command verification
+
+On an internet-connected Linux/macOS machine:
+
+```bash
+bash scripts/bootstrap-dpm.sh
+bash scripts/verify-all.sh
+```
+
+The first command installs the pinned open-source DPM SDK if needed. The second runs Node tests and Daml build/tests.
+
+---
+
+Canton is a registered trademark of Digital Asset (Switzerland) GmbH. CommitLedger is an independent project and is not sponsored or endorsed by Digital Asset.
