@@ -44,6 +44,7 @@ mkPullRequest = GitHubPullRequestRef with
 mkEvidence : MergeEvidence
 mkEvidence = MergeEvidence with
   repository = "Saidur-droid/CommitLedger"
+  issueNumber = 1
   prNumber = 7
   prUrl = "https://github.com/Saidur-droid/CommitLedger/pull/7"
   headSha = "abc123"
@@ -52,8 +53,8 @@ mkEvidence = MergeEvidence with
   mergedAt = "2026-09-27T00:00:00Z"
   evidenceHash = "sha256:demo-evidence"
 
-toVerified : Parties -> Script (ContractId VerifiedBounty)
-toVerified parties@Parties{maintainer, contributor, verifier} = do
+toClaimed : Parties -> Script (ContractId ClaimedBounty)
+toClaimed parties@Parties{maintainer, contributor} = do
   bountyCid <- mkBounty parties
   claimCid <- submit contributor do
     createCmd ClaimRequest with
@@ -61,8 +62,12 @@ toVerified parties@Parties{maintainer, contributor, verifier} = do
       maintainer
       bountyId = "bounty-001"
       contributorGithub = "octocat"
-  claimedCid <- submit maintainer do
+  submit maintainer do
     exerciseCmd claimCid ClaimRequest_Accept with bountyCid
+
+toVerified : Parties -> Script (ContractId VerifiedBounty)
+toVerified parties@Parties{contributor, verifier} = do
+  claimedCid <- toClaimed parties
   submittedCid <- submit contributor do
     exerciseCmd claimedCid ClaimedBounty_SubmitPullRequest with
       pullRequest = mkPullRequest
@@ -83,43 +88,46 @@ testHappyPath = do
   receipt.rewardAmount === 100.0
   receipt.rewardUnit === "DEMO_CREDIT"
   receipt.evidenceHash === "sha256:demo-evidence"
+  receipt.settlementRef === "demo-settlement-001"
+
+testReturnForRevision : Script ()
+testReturnForRevision = do
+  parties@Parties{maintainer, contributor} <- allocParties
+  claimedCid <- toClaimed parties
+  submittedCid <- submit contributor do
+    exerciseCmd claimedCid ClaimedBounty_SubmitPullRequest with pullRequest = mkPullRequest
+  revisedClaimedCid <- submit maintainer do
+    exerciseCmd submittedCid SubmittedBounty_ReturnForRevision with
+      reason = "Head SHA changed after review"
+  resubmittedCid <- submit contributor do
+    exerciseCmd revisedClaimedCid ClaimedBounty_SubmitPullRequest with pullRequest = mkPullRequest
+  Some resubmitted <- queryContractId maintainer resubmittedCid
+  resubmitted.bountyId === "bounty-001"
 
 testUnauthorizedVerifierFails : Script ()
 testUnauthorizedVerifierFails = do
-  parties@Parties{maintainer, contributor, outsider} <- allocParties
-  bountyCid <- mkBounty parties
-  claimCid <- submit contributor do
-    createCmd ClaimRequest with
-      contributor
-      maintainer
-      bountyId = "bounty-001"
-      contributorGithub = "octocat"
-  claimedCid <- submit maintainer do
-    exerciseCmd claimCid ClaimRequest_Accept with bountyCid
+  parties@Parties{contributor, outsider} <- allocParties
+  claimedCid <- toClaimed parties
   submittedCid <- submit contributor do
-    exerciseCmd claimedCid ClaimedBounty_SubmitPullRequest with
-      pullRequest = mkPullRequest
+    exerciseCmd claimedCid ClaimedBounty_SubmitPullRequest with pullRequest = mkPullRequest
   submitMustFail outsider do
     exerciseCmd submittedCid SubmittedBounty_VerifyMerged with evidence = mkEvidence
 
 testBadEvidenceFails : Script ()
 testBadEvidenceFails = do
-  parties@Parties{maintainer, contributor, verifier} <- allocParties
-  bountyCid <- mkBounty parties
-  claimCid <- submit contributor do
-    createCmd ClaimRequest with
-      contributor
-      maintainer
-      bountyId = "bounty-001"
-      contributorGithub = "octocat"
-  claimedCid <- submit maintainer do
-    exerciseCmd claimCid ClaimRequest_Accept with bountyCid
+  parties@Parties{contributor, verifier} <- allocParties
+  claimedCid <- toClaimed parties
   submittedCid <- submit contributor do
-    exerciseCmd claimedCid ClaimedBounty_SubmitPullRequest with
-      pullRequest = mkPullRequest
+    exerciseCmd claimedCid ClaimedBounty_SubmitPullRequest with pullRequest = mkPullRequest
   submitMustFail verifier do
     exerciseCmd submittedCid SubmittedBounty_VerifyMerged with
       evidence = mkEvidence with merged = False
+  submitMustFail verifier do
+    exerciseCmd submittedCid SubmittedBounty_VerifyMerged with
+      evidence = mkEvidence with headSha = "different-sha"
+  submitMustFail verifier do
+    exerciseCmd submittedCid SubmittedBounty_VerifyMerged with
+      evidence = mkEvidence with issueNumber = 999
 
 testSettlementAuthorizationAndReplayProtection : Script ()
 testSettlementAuthorizationAndReplayProtection = do

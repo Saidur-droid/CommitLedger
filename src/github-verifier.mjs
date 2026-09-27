@@ -42,7 +42,7 @@ export function normalizeIssue(payload, repository) {
   };
 }
 
-export async function fetchGitHubIssue({ issueUrl, token }) {
+export async function fetchGitHubIssue({ issueUrl, token, requireOpen = true }) {
   const parsed = parseGitHubIssueUrl(issueUrl);
   const response = await fetch(
     `https://api.github.com/repos/${encodeURIComponent(parsed.owner)}/${encodeURIComponent(parsed.repo)}/issues/${parsed.issueNumber}`,
@@ -50,7 +50,7 @@ export async function fetchGitHubIssue({ issueUrl, token }) {
   );
   if (!response.ok) throw new Error(`GitHub issue lookup failed: ${response.status} ${response.statusText}`);
   const issue = normalizeIssue(await response.json(), parsed.repository);
-  if (issue.state !== "open") throw new Error("Bounty source issue must be open");
+  if (requireOpen && issue.state !== "open") throw new Error("Bounty source issue must be open");
   return issue;
 }
 
@@ -64,12 +64,13 @@ export function normalizePullRequest(payload) {
   const merged = payload.merged === true;
   const mergedAt = payload.merged_at ?? "";
   const author = payload.user?.login ?? "";
+  const body = payload.body ?? "";
 
   if (!repository || !Number.isInteger(prNumber) || !prUrl || !headSha || !baseBranch) {
     throw new Error("Incomplete GitHub pull request payload");
   }
 
-  return { repository, prNumber, prUrl, headSha, baseBranch, merged, mergedAt, author };
+  return { repository, prNumber, prUrl, headSha, baseBranch, merged, mergedAt, author, body };
 }
 
 export function assertExpectedPullRequest(pr, expected) {
@@ -80,14 +81,24 @@ export function assertExpectedPullRequest(pr, expected) {
   if (expected.contributorGithub && pr.author.toLowerCase() !== expected.contributorGithub.toLowerCase()) {
     throw new Error("pull request author mismatch");
   }
+  if (expected.issueNumber) {
+    const issueNumber = Number(expected.issueNumber);
+    const issueRef = new RegExp("(?:#|issues/)" + issueNumber + "\\b", "i");
+    if (!issueRef.test(pr.body)) throw new Error("pull request does not reference the bounty issue");
+    pr.issueNumber = issueNumber;
+  }
   if (!pr.merged) throw new Error("pull request is not merged");
   if (!pr.mergedAt) throw new Error("merged pull request is missing merged_at");
   return pr;
 }
 
 export function buildMergeEvidence(pr) {
+  if (!Number.isInteger(pr.issueNumber) || pr.issueNumber <= 0) {
+    throw new Error("verified pull request is missing the bounty issue number");
+  }
   const canonical = JSON.stringify({
     repository: pr.repository,
+    issueNumber: pr.issueNumber,
     prNumber: pr.prNumber,
     prUrl: pr.prUrl,
     headSha: pr.headSha,
@@ -97,6 +108,7 @@ export function buildMergeEvidence(pr) {
   });
   return {
     repository: pr.repository,
+    issueNumber: pr.issueNumber,
     prNumber: pr.prNumber,
     prUrl: pr.prUrl,
     headSha: pr.headSha,
