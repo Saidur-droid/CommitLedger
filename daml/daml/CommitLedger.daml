@@ -24,9 +24,6 @@ data MergeEvidence = MergeEvidence
     evidenceHash : Text
   deriving (Eq, Show)
 
--- | A maintainer commits a reward to a real GitHub issue.
--- The Bounty contract is the on-ledger commitment: settlement cannot happen
--- without moving through the authorized claim, submission and verification flow.
 template Bounty
   with
     maintainer : Party
@@ -48,9 +45,6 @@ template Bounty
       controller maintainer
       do pure ()
 
--- | A contributor requests to claim a bounty.
--- The maintainer can see and accept/reject the request, while the contributor
--- remains the authorizing signatory of the request itself.
 template ClaimRequest
   with
     contributor : Party
@@ -87,7 +81,6 @@ template ClaimRequest
           rewardAmount = bounty.rewardAmount
           rewardUnit = bounty.rewardUnit
 
--- | Accepted claim. Only the selected contributor can submit work evidence.
 template ClaimedBounty
   with
     maintainer : Party
@@ -113,6 +106,9 @@ template ClaimedBounty
         assertMsg "pull request repository must match bounty repository"
           (pullRequest.repository == repository)
         assertMsg "pull request number must be positive" (pullRequest.prNumber > 0)
+        assertMsg "pull request URL is required" (pullRequest.prUrl /= "")
+        assertMsg "pull request head SHA is required" (pullRequest.headSha /= "")
+        assertMsg "pull request base branch is required" (pullRequest.baseBranch /= "")
         create SubmittedBounty with
           maintainer
           verifier
@@ -127,9 +123,6 @@ template ClaimedBounty
           rewardUnit
           pullRequest
 
--- | Work has been submitted but not trusted yet.
--- Only the dedicated verifier party may attest a merge, and the evidence must
--- match the exact PR submitted by the contributor.
 template SubmittedBounty
   with
     maintainer : Party
@@ -148,6 +141,27 @@ template SubmittedBounty
     signatory maintainer
     observer contributor, verifier
 
+    -- A maintainer can return the exact submitted PR for revision.
+    -- The reason is preserved as the exercise argument in the Canton transaction.
+    choice SubmittedBounty_ReturnForRevision : ContractId ClaimedBounty
+      with
+        reason : Text
+      controller maintainer
+      do
+        assertMsg "revision reason is required" (reason /= "")
+        create ClaimedBounty with
+          maintainer
+          verifier
+          contributor
+          contributorGithub
+          bountyId
+          repository
+          issueNumber
+          issueUrl
+          title
+          rewardAmount
+          rewardUnit
+
     choice SubmittedBounty_VerifyMerged : ContractId VerifiedBounty
       with
         evidence : MergeEvidence
@@ -156,8 +170,11 @@ template SubmittedBounty
         assertMsg "GitHub evidence must report a merged pull request" evidence.merged
         assertMsg "evidence repository mismatch" (evidence.repository == pullRequest.repository)
         assertMsg "evidence PR number mismatch" (evidence.prNumber == pullRequest.prNumber)
+        assertMsg "evidence URL mismatch" (evidence.prUrl == pullRequest.prUrl)
         assertMsg "evidence head SHA mismatch" (evidence.headSha == pullRequest.headSha)
         assertMsg "evidence base branch mismatch" (evidence.baseBranch == pullRequest.baseBranch)
+        assertMsg "merge timestamp is required" (evidence.mergedAt /= "")
+        assertMsg "evidence hash is required" (evidence.evidenceHash /= "")
         create VerifiedBounty with
           maintainer
           verifier
@@ -173,8 +190,6 @@ template SubmittedBounty
           pullRequest
           evidence
 
--- | Verified work is settlement-eligible.
--- Settlement is consuming, so the same verified bounty cannot settle twice.
 template VerifiedBounty
   with
     maintainer : Party
@@ -200,6 +215,7 @@ template VerifiedBounty
         settlementRef : Text
       controller maintainer
       do
+        assertMsg "settlement reference is required" (settlementRef /= "")
         create SettlementReceipt with
           maintainer
           verifier
@@ -215,8 +231,6 @@ template VerifiedBounty
           settledAt
           settlementRef
 
--- | Immutable, auditable proof that a specific verified GitHub contribution
--- reached the final settlement state on Canton.
 template SettlementReceipt
   with
     maintainer : Party
