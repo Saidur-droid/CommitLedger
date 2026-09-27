@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="CommitLedger verifies GitHub work and settles authorized bounty state on Canton.">
+  <title>CommitLedger — Verified work, settled on Canton</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="/">CommitLedger</a>
+    <span class="badge">HackCanton S3 build</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">CANTON-NATIVE VERIFIED WORK SETTLEMENT</p>
+      <h1>Proof of work should be verifiable before settlement.</h1>
+      <p class="lead">CommitLedger binds real GitHub merge evidence to Daml authorization and an auditable Canton settlement receipt.</p>
+      <div class="flow" aria-label="CommitLedger flow">
+        <span>GitHub issue</span><b>→</b><span>Daml bounty</span><b>→</b><span>PR merge</span><b>→</b><span>Verify</span><b>→</b><span>Canton receipt</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="kicker">01 · CANONICAL EVIDENCE</p>
+            <h2>Verify a merged GitHub pull request</h2>
+          </div>
+          <span id="github-status" class="status">Ready</span>
+        </div>
+        <form id="verify-form">
+          <label>Repository<input name="repository" value="Saidur-droid/CommitLedger" required></label>
+          <div class="row">
+            <label>PR number<input name="prNumber" type="number" min="1" value="2" required></label>
+            <label>Base branch<input name="baseBranch" value="main"></label>
+          </div>
+          <label>Contributor GitHub (optional)<input name="contributorGithub" value="Saidur-droid"></label>
+          <button type="submit">Verify canonical merge</button>
+        </form>
+        <pre id="github-output" class="output">No evidence loaded yet.</pre>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="kicker">02 · CANTON TRUST LAYER</p>
+            <h2>Why Canton is essential</h2>
+          </div>
+          <span id="health-status" class="status">Checking</span>
+        </div>
+        <ul class="checks">
+          <li><strong>Daml authorization:</strong> only the selected contributor submits work, only the verifier attests the merge, only the maintainer settles.</li>
+          <li><strong>Evidence binding:</strong> repository, PR number, head SHA and base branch must match before verification.</li>
+          <li><strong>Replay protection:</strong> settlement consumes the verified contract; the same work cannot settle twice.</li>
+          <li><strong>Auditability:</strong> the final receipt carries bounty, PR, reward unit and evidence hash on ledger.</li>
+        </ul>
+        <div class="notice">
+          <strong>No fake money.</strong> Competition flows use <code>DEMO_CREDIT</code>, clearly labelled as a non-production test unit. A token-standard payment adapter is a future extension, not a demo dependency.
+        </div>
+      </article>
+    </section>
+
+    <section class="proof">
+      <p class="kicker">JUDGE PROOF</p>
+      <h2>One flow. Four independent checks.</h2>
+      <div class="proof-grid">
+        <div><strong>1</strong><span>Real provider state</span><p>GitHub is queried directly; browser claims are not trusted.</p></div>
+        <div><strong>2</strong><span>Contract authorization</span><p>Daml parties and choices enforce who may advance each state.</p></div>
+        <div><strong>3</strong><span>Failure evidence</span><p>Unauthorized verifier, bad merge evidence and duplicate settlement are explicit negative tests.</p></div>
+        <div><strong>4</strong><span>Ledger evidence</span><p>Canton JSON Ledger API commands produce inspectable update and contract evidence.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>CommitLedger · competition/demo build · no claim of external adoption or real-money settlement</footer>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
