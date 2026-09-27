@@ -128,7 +128,8 @@ const server = http.createServer(async (req, res) => {
         expected: {
           headSha: input.headSha || "",
           baseBranch: input.baseBranch || "",
-          contributorGithub: input.contributorGithub || ""
+          contributorGithub: input.contributorGithub || "",
+          issueNumber: Number(input.issueNumber)
         }
       });
       return json(res, 200, { ok: true, evidence });
