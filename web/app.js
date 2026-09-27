@@ -1,38 +1,107 @@
-const form = document.querySelector("#verify-form");
-const output = document.querySelector("#github-output");
-const status = document.querySelector("#github-status");
-const health = document.querySelector("#health-status");
+const bountyForm = document.querySelector("#bounty-form");
+const verifyForm = document.querySelector("#verify-form");
+const issueStatus = document.querySelector("#issue-status");
+const githubStatus = document.querySelector("#github-status");
+const cantonBadge = document.querySelector("#canton-badge");
+const ledgerStatus = document.querySelector("#ledger-status");
+const bountySummary = document.querySelector("#bounty-summary");
+const githubOutput = document.querySelector("#github-output");
+const ledgerOutput = document.querySelector("#ledger-output");
+
+let health = {};
+let preparedBounty = null;
+
+async function request(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
 
 async function checkHealth() {
   try {
-    const res = await fetch("/api/health");
-    const data = await res.json();
-    health.textContent = data.cantonConfigured ? "Canton configured" : "LocalNet not configured";
+    health = await request("/api/health");
+    cantonBadge.textContent = health.cantonConfigured ? "Canton connected" : "Canton setup pending";
+    ledgerStatus.textContent = health.packageConfigured ? "Package configured" : "Needs package ID";
   } catch {
-    health.textContent = "Offline";
+    cantonBadge.textContent = "Local app offline";
   }
 }
 
-form.addEventListener("submit", async (event) => {
+bountyForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  status.textContent = "Verifying";
-  output.textContent = "Reading canonical GitHub state…";
-  const values = Object.fromEntries(new FormData(form));
-  values.prNumber = Number(values.prNumber);
+  issueStatus.textContent = "Verifying";
+  bountySummary.className = "summary muted";
+  bountySummary.textContent = "Reading canonical GitHub issue…";
+  ledgerOutput.textContent = "Waiting for verified issue.";
   try {
-    const res = await fetch("/api/github/verify", {
+    const input = Object.fromEntries(new FormData(bountyForm));
+    input.rewardAmount = Number(input.rewardAmount);
+    const data = await request("/api/bounty/prepare", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values)
+      body: JSON.stringify(input)
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Verification failed");
-    status.textContent = "Verified merge";
-    output.textContent = JSON.stringify(data.evidence, null, 2);
+    preparedBounty = data.bounty;
+    issueStatus.textContent = "Issue verified";
+    bountySummary.className = "summary";
+    bountySummary.innerHTML = `
+      <strong>${escapeHtml(data.bounty.title)}</strong>
+      <span>${escapeHtml(data.bounty.repository)} #${data.bounty.issueNumber}</span>
+      <span>${data.bounty.rewardAmount} ${escapeHtml(data.bounty.rewardUnit)} · demo/test value</span>
+    `;
+
+    if (!health.packageConfigured) {
+      ledgerStatus.textContent = "Set CANTON_PACKAGE_ID";
+      ledgerOutput.textContent = JSON.stringify({
+        action: "createBounty",
+        note: "Set CANTON_PACKAGE_ID plus party IDs to generate the final ledger command.",
+        bounty: preparedBounty
+      }, null, 2);
+      return;
+    }
+
+    ledgerOutput.textContent = JSON.stringify({
+      action: "createBounty",
+      bounty: preparedBounty,
+      next: "provide maintainer + verifier Canton party IDs"
+    }, null, 2);
   } catch (error) {
-    status.textContent = "Rejected";
-    output.textContent = error.message;
+    issueStatus.textContent = "Rejected";
+    bountySummary.textContent = error.message;
+    ledgerOutput.textContent = "No Canton command generated.";
   }
 });
+
+verifyForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  githubStatus.textContent = "Verifying";
+  githubOutput.textContent = "Reading canonical GitHub pull request…";
+  const values = Object.fromEntries(new FormData(verifyForm));
+  values.prNumber = Number(values.prNumber);
+  try {
+    const data = await request("/api/github/verify", {
+      method: "POST",
+      body: JSON.stringify(values)
+    });
+    githubStatus.textContent = "Merge verified";
+    githubOutput.textContent = JSON.stringify(data.evidence, null, 2);
+  } catch (error) {
+    githubStatus.textContent = "Rejected";
+    githubOutput.textContent = error.message;
+  }
+});
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
 
 checkHealth();
