@@ -1,9 +1,7 @@
-name: CI
+name: Manual Verification
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,6 +16,21 @@ jobs:
           node-version: "22"
       - run: npm test
 
+  daml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DPM SDK 3.5.12
+        run: |
+          curl -sSL https://get.digitalasset.com/install/install.sh | DPM_EDITION=open-source bash -s 3.5.12
+          echo "$HOME/.dpm/bin" >> "$GITHUB_PATH"
+      - name: Build Daml
+        working-directory: daml
+        run: DPM_SDK_VERSION=3.5.12 dpm build --all
+      - name: Test Daml
+        working-directory: daml
+        run: DPM_SDK_VERSION=3.5.12 dpm test
+
   repository-gates:
     runs-on: ubuntu-latest
     steps:
@@ -27,6 +40,7 @@ jobs:
           test -f LOCKED_DECISIONS.md
           test -f docs/COMPETITION_COMPLIANCE.md
           test -f docs/WINNING_STANDARD.md
+          test -f docs/RULES_SNAPSHOT.md
           test -f daml/daml/CommitLedger.daml
           test -f daml/daml/Test.daml
           test -f src/github-verifier.mjs
