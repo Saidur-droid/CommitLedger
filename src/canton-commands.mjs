@@ -27,13 +27,13 @@ export function buildCreateBountyCommand({ packageId, maintainer, verifier, boun
   return createCommand(templateId(packageId, "Bounty"), {
     maintainer: requireText(maintainer, "maintainer"),
     verifier: requireText(verifier, "verifier"),
-    bountyId: bounty.bountyId,
-    repository: bounty.repository,
-    issueNumber: bounty.issueNumber,
-    issueUrl: bounty.issueUrl,
-    title: bounty.title,
-    rewardAmount: bounty.rewardAmount,
-    rewardUnit: bounty.rewardUnit
+    bountyId: requireText(bounty.bountyId, "bountyId"),
+    repository: requireText(bounty.repository, "repository"),
+    issueNumber: Number(bounty.issueNumber),
+    issueUrl: requireText(bounty.issueUrl, "issueUrl"),
+    title: requireText(bounty.title, "title"),
+    rewardAmount: requireText(bounty.rewardAmount, "rewardAmount"),
+    rewardUnit: requireText(bounty.rewardUnit, "rewardUnit")
   });
 }
 
@@ -61,6 +61,15 @@ export function buildSubmitPullRequestCommand({ packageId, claimedBountyCid, pul
     claimedBountyCid,
     "ClaimedBounty_SubmitPullRequest",
     { pullRequest }
+  );
+}
+
+export function buildReturnForRevisionCommand({ packageId, submittedBountyCid, reason }) {
+  return exerciseCommand(
+    templateId(packageId, "SubmittedBounty"),
+    submittedBountyCid,
+    "SubmittedBounty_ReturnForRevision",
+    { reason: requireText(reason, "reason") }
   );
 }
 
