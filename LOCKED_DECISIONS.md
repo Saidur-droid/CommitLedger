@@ -4,6 +4,13 @@ _Last updated: 2026-09-27_
 
 This file is the source of truth for the HackCanton Season 3 build. Do not silently change these decisions. If an official HackCanton rule conflicts with this file, the official rule wins and this file must be updated.
 
+## Two locked goals
+
+1. **Competition compliance:** follow every verified HackCanton rule and block final submission until every critical unknown has been checked against the official portal/rulebook.
+2. **Winning-quality product:** build a top-tier, judgeable Canton-native product where Canton is technically indispensable, while never fabricating traction, transactions, evidence, or official requirements.
+
+Neither goal may be traded away for extra features.
+
 ## Product
 
 **Name:** CommitLedger
@@ -27,13 +34,14 @@ Do not submit a cosmetic Canton integration.
 - No Vercel.
 - No Supabase.
 - No requirement for the founder to spend real money to demonstrate the product.
-- No fake users, fake traction, fake transactions, or fake production claims.
+- No fake users, fake traction, fake transactions, fake testimonials, or fake production claims.
 - Real external users are helpful evidence but are not treated as a hard dependency unless an official competition rule explicitly requires them.
 - Use real GitHub issues / pull requests / merge state as work evidence.
 - Use Daml smart contracts for the bounty and settlement state machine.
-- Use Canton Ledger API for real ledger reads/writes in the demo.
+- Use Canton Ledger API for real ledger reads/writes in the final demo.
 - Provide reproducible local/dev-network execution and evidence.
 - Clearly label demo/test parties and demo/test assets as non-production.
+- Any unverified competition requirement must remain marked PENDING, never guessed.
 
 ## Payment / settlement decision
 
@@ -47,7 +55,7 @@ This avoids:
 - confusing demo/test value with real money,
 - risking the core submission on wallet/mainnet availability.
 
-The architecture should keep a clean future adapter point for a Canton Coin / Canton Token Standard-compatible payment rail, but this is an optional production extension, not a blocker for the competition MVP.
+The architecture keeps a clean future adapter point for a Canton Coin / Canton Token Standard-compatible payment rail, but this is an optional production extension, not a blocker for the competition MVP.
 
 ## Required technical proof
 
@@ -55,9 +63,9 @@ The final submission must demonstrate:
 
 1. A bounty is created from a real GitHub issue.
 2. Authorization is enforced through Daml parties/choices.
-3. A contributor claims the bounty.
+3. A contributor claims or accepts the bounty under the contract model.
 4. A real GitHub pull request is linked.
-5. The backend independently verifies repository, branch, author/claim policy, and merged state.
+5. The backend independently verifies repository, branch, relevant identity policy, and merged state.
 6. A successful merge enables the settlement transition.
 7. Canton records the resulting state/settlement.
 8. Unauthorized settlement attempts fail.
@@ -87,20 +95,28 @@ Required before submission:
 Do not overbuild a marketplace, token, DAO, reputation network, or generalized freelancing platform before the core verified-work settlement flow is excellent.
 
 Priority:
-1. correctness
-2. Canton-native value
-3. judge reproducibility
-4. security / authorization
-5. UX polish
-6. optional extensions
+1. competition compliance
+2. correctness
+3. Canton-native value
+4. judge reproducibility
+5. security / authorization
+6. UX polish
+7. optional extensions
 
 ## Integrity rules
 
-- Never claim mainnet usage unless actually demonstrated.
+- Never claim MainNet usage unless actually demonstrated.
 - Never call demo assets real money.
 - Never fabricate users, transactions, testimonials, adoption, or performance numbers.
 - Never weaken verification to make the demo easier.
+- Never present an internal quality target as an official judging criterion.
 - Competition-specific official rules and deadlines always override assumptions in this repository.
+
+## Linked control documents
+
+- [Competition compliance gate](docs/COMPETITION_COMPLIANCE.md)
+- [Winning standard](docs/WINNING_STANDARD.md)
+- [Competition build roadmap](docs/BUILD_ROADMAP.md)
 
 ## Submission target
 
