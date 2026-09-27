@@ -121,3 +121,17 @@ Priority:
 ## Submission target
 
 Operational target: feature freeze and evidence complete before the official deadline buffer. Submit early enough to leave time for portal issues and final verification.
+
+
+## Stable toolchain lock
+
+- Use the latest verified stable open-source DPM 3.5 bundle unless an official HackCanton requirement says otherwise.
+- Current locked bundle: DPM SDK 3.5.12.
+- Do not use snapshot SDKs for the final competition build without a documented compatibility reason.
+- Runtime proof must come from real DPM build/test output and real Canton Ledger API responses; never infer success from source code alone.
+
+## Competition presentation integrity
+
+- The repository may use the Canton name descriptively, but must not imply Digital Asset sponsorship or endorsement.
+- Do not use Canton branding/logos in a way that suggests affiliation.
+- Keep the product identity as CommitLedger; Canton is the underlying network/trust layer.
