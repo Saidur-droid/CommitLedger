@@ -1,0 +1,237 @@
+module CommitLedger where
+
+-- CommitLedger intentionally models a demo/test settlement asset.
+-- It does not claim to transfer fiat, Canton Coin, or production funds.
+
+data GitHubPullRequestRef = GitHubPullRequestRef
+  with
+    repository : Text
+    prNumber : Int
+    prUrl : Text
+    headSha : Text
+    baseBranch : Text
+  deriving (Eq, Show)
+
+data MergeEvidence = MergeEvidence
+  with
+    repository : Text
+    prNumber : Int
+    prUrl : Text
+    headSha : Text
+    baseBranch : Text
+    merged : Bool
+    mergedAt : Text
+    evidenceHash : Text
+  deriving (Eq, Show)
+
+-- | A maintainer commits a reward to a real GitHub issue.
+-- The Bounty contract is the on-ledger commitment: settlement cannot happen
+-- without moving through the authorized claim, submission and verification flow.
+template Bounty
+  with
+    maintainer : Party
+    verifier : Party
+    bountyId : Text
+    repository : Text
+    issueNumber : Int
+    issueUrl : Text
+    title : Text
+    rewardAmount : Decimal
+    rewardUnit : Text
+  where
+    signatory maintainer
+    observer verifier
+
+    ensure rewardAmount > 0.0 && issueNumber > 0
+
+    choice Bounty_Cancel : ()
+      controller maintainer
+      do pure ()
+
+-- | A contributor requests to claim a bounty.
+-- The maintainer can see and accept/reject the request, while the contributor
+-- remains the authorizing signatory of the request itself.
+template ClaimRequest
+  with
+    contributor : Party
+    maintainer : Party
+    bountyId : Text
+    contributorGithub : Text
+  where
+    signatory contributor
+    observer maintainer
+
+    choice ClaimRequest_Reject : ()
+      controller maintainer
+      do pure ()
+
+    choice ClaimRequest_Accept : ContractId ClaimedBounty
+      with
+        bountyCid : ContractId Bounty
+      controller maintainer
+      do
+        bounty <- fetch bountyCid
+        assertMsg "claim bounty id must match" (bounty.bountyId == bountyId)
+        assertMsg "claim maintainer must match bounty maintainer" (bounty.maintainer == maintainer)
+        archive bountyCid
+        create ClaimedBounty with
+          maintainer = bounty.maintainer
+          verifier = bounty.verifier
+          contributor
+          contributorGithub
+          bountyId = bounty.bountyId
+          repository = bounty.repository
+          issueNumber = bounty.issueNumber
+          issueUrl = bounty.issueUrl
+          title = bounty.title
+          rewardAmount = bounty.rewardAmount
+          rewardUnit = bounty.rewardUnit
+
+-- | Accepted claim. Only the selected contributor can submit work evidence.
+template ClaimedBounty
+  with
+    maintainer : Party
+    verifier : Party
+    contributor : Party
+    contributorGithub : Text
+    bountyId : Text
+    repository : Text
+    issueNumber : Int
+    issueUrl : Text
+    title : Text
+    rewardAmount : Decimal
+    rewardUnit : Text
+  where
+    signatory maintainer
+    observer contributor, verifier
+
+    choice ClaimedBounty_SubmitPullRequest : ContractId SubmittedBounty
+      with
+        pullRequest : GitHubPullRequestRef
+      controller contributor
+      do
+        assertMsg "pull request repository must match bounty repository"
+          (pullRequest.repository == repository)
+        assertMsg "pull request number must be positive" (pullRequest.prNumber > 0)
+        create SubmittedBounty with
+          maintainer
+          verifier
+          contributor
+          contributorGithub
+          bountyId
+          repository
+          issueNumber
+          issueUrl
+          title
+          rewardAmount
+          rewardUnit
+          pullRequest
+
+-- | Work has been submitted but not trusted yet.
+-- Only the dedicated verifier party may attest a merge, and the evidence must
+-- match the exact PR submitted by the contributor.
+template SubmittedBounty
+  with
+    maintainer : Party
+    verifier : Party
+    contributor : Party
+    contributorGithub : Text
+    bountyId : Text
+    repository : Text
+    issueNumber : Int
+    issueUrl : Text
+    title : Text
+    rewardAmount : Decimal
+    rewardUnit : Text
+    pullRequest : GitHubPullRequestRef
+  where
+    signatory maintainer
+    observer contributor, verifier
+
+    choice SubmittedBounty_VerifyMerged : ContractId VerifiedBounty
+      with
+        evidence : MergeEvidence
+      controller verifier
+      do
+        assertMsg "GitHub evidence must report a merged pull request" evidence.merged
+        assertMsg "evidence repository mismatch" (evidence.repository == pullRequest.repository)
+        assertMsg "evidence PR number mismatch" (evidence.prNumber == pullRequest.prNumber)
+        assertMsg "evidence head SHA mismatch" (evidence.headSha == pullRequest.headSha)
+        assertMsg "evidence base branch mismatch" (evidence.baseBranch == pullRequest.baseBranch)
+        create VerifiedBounty with
+          maintainer
+          verifier
+          contributor
+          contributorGithub
+          bountyId
+          repository
+          issueNumber
+          issueUrl
+          title
+          rewardAmount
+          rewardUnit
+          pullRequest
+          evidence
+
+-- | Verified work is settlement-eligible.
+-- Settlement is consuming, so the same verified bounty cannot settle twice.
+template VerifiedBounty
+  with
+    maintainer : Party
+    verifier : Party
+    contributor : Party
+    contributorGithub : Text
+    bountyId : Text
+    repository : Text
+    issueNumber : Int
+    issueUrl : Text
+    title : Text
+    rewardAmount : Decimal
+    rewardUnit : Text
+    pullRequest : GitHubPullRequestRef
+    evidence : MergeEvidence
+  where
+    signatory maintainer
+    observer contributor, verifier
+
+    choice VerifiedBounty_Settle : ContractId SettlementReceipt
+      with
+        settledAt : Time
+        settlementRef : Text
+      controller maintainer
+      do
+        create SettlementReceipt with
+          maintainer
+          verifier
+          contributor
+          contributorGithub
+          bountyId
+          repository
+          issueNumber
+          pullRequest
+          rewardAmount
+          rewardUnit
+          evidenceHash = evidence.evidenceHash
+          settledAt
+          settlementRef
+
+-- | Immutable, auditable proof that a specific verified GitHub contribution
+-- reached the final settlement state on Canton.
+template SettlementReceipt
+  with
+    maintainer : Party
+    verifier : Party
+    contributor : Party
+    contributorGithub : Text
+    bountyId : Text
+    repository : Text
+    issueNumber : Int
+    pullRequest : GitHubPullRequestRef
+    rewardAmount : Decimal
+    rewardUnit : Text
+    evidenceHash : Text
+    settledAt : Time
+    settlementRef : Text
+  where
+    signatory maintainer
+    observer contributor, verifier
