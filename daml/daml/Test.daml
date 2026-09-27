@@ -1,0 +1,140 @@
+module Test where
+
+import CommitLedger
+import Daml.Script
+import DA.Assert ((===))
+
+data Parties = Parties
+  with
+    maintainer : Party
+    contributor : Party
+    verifier : Party
+    outsider : Party
+
+allocParties : Script Parties
+allocParties = do
+  maintainer <- allocateParty "Maintainer"
+  contributor <- allocateParty "Contributor"
+  verifier <- allocateParty "Verifier"
+  outsider <- allocateParty "Outsider"
+  pure Parties {maintainer, contributor, verifier, outsider}
+
+mkBounty : Parties -> Script (ContractId Bounty)
+mkBounty Parties{maintainer, verifier} =
+  submit maintainer do
+    createCmd Bounty with
+      maintainer
+      verifier
+      bountyId = "bounty-001"
+      repository = "Saidur-droid/CommitLedger"
+      issueNumber = 1
+      issueUrl = "https://github.com/Saidur-droid/CommitLedger/issues/1"
+      title = "Implement verified settlement"
+      rewardAmount = 100.0
+      rewardUnit = "DEMO_CREDIT"
+
+mkPullRequest : GitHubPullRequestRef
+mkPullRequest = GitHubPullRequestRef with
+  repository = "Saidur-droid/CommitLedger"
+  prNumber = 7
+  prUrl = "https://github.com/Saidur-droid/CommitLedger/pull/7"
+  headSha = "abc123"
+  baseBranch = "main"
+
+mkEvidence : MergeEvidence
+mkEvidence = MergeEvidence with
+  repository = "Saidur-droid/CommitLedger"
+  prNumber = 7
+  prUrl = "https://github.com/Saidur-droid/CommitLedger/pull/7"
+  headSha = "abc123"
+  baseBranch = "main"
+  merged = True
+  mergedAt = "2026-09-27T00:00:00Z"
+  evidenceHash = "sha256:demo-evidence"
+
+toVerified : Parties -> Script (ContractId VerifiedBounty)
+toVerified parties@Parties{maintainer, contributor, verifier} = do
+  bountyCid <- mkBounty parties
+  claimCid <- submit contributor do
+    createCmd ClaimRequest with
+      contributor
+      maintainer
+      bountyId = "bounty-001"
+      contributorGithub = "octocat"
+  claimedCid <- submit maintainer do
+    exerciseCmd claimCid ClaimRequest_Accept with bountyCid
+  submittedCid <- submit contributor do
+    exerciseCmd claimedCid ClaimedBounty_SubmitPullRequest with
+      pullRequest = mkPullRequest
+  submit verifier do
+    exerciseCmd submittedCid SubmittedBounty_VerifyMerged with evidence = mkEvidence
+
+testHappyPath : Script ()
+testHappyPath = do
+  parties@Parties{maintainer, contributor} <- allocParties
+  verifiedCid <- toVerified parties
+  now <- getTime
+  receiptCid <- submit maintainer do
+    exerciseCmd verifiedCid VerifiedBounty_Settle with
+      settledAt = now
+      settlementRef = "demo-settlement-001"
+  Some receipt <- queryContractId contributor receiptCid
+  receipt.bountyId === "bounty-001"
+  receipt.rewardAmount === 100.0
+  receipt.rewardUnit === "DEMO_CREDIT"
+  receipt.evidenceHash === "sha256:demo-evidence"
+
+testUnauthorizedVerifierFails : Script ()
+testUnauthorizedVerifierFails = do
+  parties@Parties{maintainer, contributor, outsider} <- allocParties
+  bountyCid <- mkBounty parties
+  claimCid <- submit contributor do
+    createCmd ClaimRequest with
+      contributor
+      maintainer
+      bountyId = "bounty-001"
+      contributorGithub = "octocat"
+  claimedCid <- submit maintainer do
+    exerciseCmd claimCid ClaimRequest_Accept with bountyCid
+  submittedCid <- submit contributor do
+    exerciseCmd claimedCid ClaimedBounty_SubmitPullRequest with
+      pullRequest = mkPullRequest
+  submitMustFail outsider do
+    exerciseCmd submittedCid SubmittedBounty_VerifyMerged with evidence = mkEvidence
+
+testBadEvidenceFails : Script ()
+testBadEvidenceFails = do
+  parties@Parties{maintainer, contributor, verifier} <- allocParties
+  bountyCid <- mkBounty parties
+  claimCid <- submit contributor do
+    createCmd ClaimRequest with
+      contributor
+      maintainer
+      bountyId = "bounty-001"
+      contributorGithub = "octocat"
+  claimedCid <- submit maintainer do
+    exerciseCmd claimCid ClaimRequest_Accept with bountyCid
+  submittedCid <- submit contributor do
+    exerciseCmd claimedCid ClaimedBounty_SubmitPullRequest with
+      pullRequest = mkPullRequest
+  submitMustFail verifier do
+    exerciseCmd submittedCid SubmittedBounty_VerifyMerged with
+      evidence = mkEvidence with merged = False
+
+testSettlementAuthorizationAndReplayProtection : Script ()
+testSettlementAuthorizationAndReplayProtection = do
+  parties@Parties{maintainer, contributor} <- allocParties
+  verifiedCid <- toVerified parties
+  now <- getTime
+  submitMustFail contributor do
+    exerciseCmd verifiedCid VerifiedBounty_Settle with
+      settledAt = now
+      settlementRef = "unauthorized"
+  _ <- submit maintainer do
+    exerciseCmd verifiedCid VerifiedBounty_Settle with
+      settledAt = now
+      settlementRef = "demo-settlement-001"
+  submitMustFail maintainer do
+    exerciseCmd verifiedCid VerifiedBounty_Settle with
+      settledAt = now
+      settlementRef = "duplicate"
