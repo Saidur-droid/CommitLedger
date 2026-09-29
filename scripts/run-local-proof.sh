@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eEuo pipefail
+trap 'status=$?; echo "PROOF ERROR: line $LINENO: $BASH_COMMAND (status $status)" >&2' ERR
 cd "$(dirname "$0")/.."
 
 export PATH="${DPM_HOME:-$HOME/.dpm}/bin:$PATH"
