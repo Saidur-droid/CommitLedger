@@ -1,37 +1,69 @@
-# CommitLedger - submission draft
+# CommitLedger — HackCanton Season 3 Submission Draft
 
-**Status: draft; do not submit until FINAL_CHECKLIST.md is complete.** Final portal fields and length limits must be confirmed by the registered participant.
+**Status: draft. Do not submit until `docs/FINAL_CHECKLIST.md` has no critical implementation failures and all external account/publication gates are verified.**
+
+## Track
+**Track 1 — Real-World Assets (RWA) & Business Workflows**
 
 ## One-line description
+CommitLedger turns verified GitHub contribution work into an authorization-controlled Canton settlement workflow with an auditable receipt.
 
-CommitLedger binds verified GitHub work to a role-authorized bounty workflow and an auditable settlement receipt on Canton.
+## Problem
+GitHub can prove that an issue exists and a pull request merged, but it does not by itself enforce which party may verify a bounty claim or which party may settle it.
 
-## Problem and approach
+## Solution
+CommitLedger binds a real GitHub issue and merged pull request to a Daml state machine:
 
-Open-source bounty participants need a consistent way to connect accepted work with an inspectable settlement decision. CommitLedger reads a real GitHub issue and pull request server-side, validates the repository, issue reference, contributor policy, target branch and merged commit, and binds that evidence to a Daml lifecycle.
+Issue → Bounty → Claim → Pull Request → Merge Verification → Settlement → SettlementReceipt.
 
-The implemented flow is Issue -> Bounty -> ClaimRequest -> ClaimedBounty -> SubmittedBounty -> VerifiedBounty -> SettlementReceipt. The maintainer, contributor and verifier have different choices. The verifier remains a trusted external oracle: Daml does not independently call GitHub. Hashing makes the evidence identifiable; it does not eliminate trust in that oracle.
+The backend independently validates repository identity, issue binding, contributor policy, base branch, merged state, head SHA, merge commit SHA, and merge evidence before the ledger workflow advances.
 
-## Why Canton and Daml
+## Why Canton
+Canton/Daml is used for meaningful workflow state and authorization: distinct maintainer, contributor, and verifier roles; authorized contract choices; inspectable update/contract identifiers; and consumed-contract replay protection. GitHub remains the external evidence source.
 
-The intended demonstrated value is authorized state progression, inspectable contract/update references, and prevention of re-exercising the same consumed verified contract. That last property is per-contract replay protection, not a claim that an issue can never receive multiple separately created bounties. Demo runs intentionally have distinct identifiers.
+## Target users / ICP
+Open-source maintainers, foundations, ecosystem grant programs, and organizations operating contributor bounty workflows.
 
-## Technical implementation
+## GTM
+1. prove the workflow in one repository;
+2. pilot with one foundation/ecosystem bounty operator;
+3. after validation, expand repository support and integrate an approved settlement adapter.
 
-Node.js backend and local judge UI; canonical GitHub API adapter; Daml contracts; Canton JSON Ledger API v2; proof export; automated Node/Daml verification and local proof scripts. The project has no application-package dependency on a paid hosting provider or external payment rail.
+No paid pilot or customer traction is claimed today.
 
-## Evidence currently established
+## Validation / evidence
+Use only evidence captured for the exact submission commit:
+- real GitHub issue and merged PR fixture;
+- green Node test suite;
+- green Daml build/script tests;
+- real Canton lifecycle to SettlementReceipt;
+- exact negative rejection evidence;
+- browser-accessible judge flow and exported proof.
 
-The original Node test suite passed 16/16 locally. The expanded delivery suite passed 65/65 locally, including failure classification, canonical GitHub validation, local HTTP-server checks and simulated lifecycle transport. These transport tests do not establish live Canton deployment or settlement.
+Transport mocks are never described as live Canton evidence.
 
-## Runtime evidence to insert only after a successful run
+## Demo and pitch
+The final recorded demo must be **5 minutes or less** and show:
+1. problem and roles;
+2. real GitHub issue/PR evidence;
+3. authorized Canton lifecycle;
+4. wrong-evidence / unauthorized / replay rejection;
+5. final receipt and why Canton is necessary;
+6. Track 1 business use and pilot path.
 
-Insert the exact tested commit, DAR package ID, Canton environment, retained build/test logs, final receipt contract/update IDs, evidence JSON artifact, negative rejection responses, judge-accessible demo and video links. These artifacts are not yet claimed in this draft. No placeholder IDs or fabricated testimonials are supplied.
+## Integrity
+DEMO_CREDIT is non-production test value. CommitLedger does not claim fiat/Canton Coin transfer, MainNet operation, production custody, real users, revenue, or organizer endorsement without evidence.
 
-## Scope and integrity
+## AI disclosure
+AI-assisted tools were used for research, planning, code review, tests, documentation, and implementation support. The team remains responsible for every submitted artifact and claim.
 
-DEMO_CREDIT is non-production test value. This build does not claim fiat, Canton Coin or MainNet transfer; external users; production custody; financial returns; organizer endorsement; or guaranteed competition performance. The source fixture is the project's own real issue #5 and PR #6, not user adoption.
+## Hackathon-period disclosure
+Any pre-existing code must be disclosed. Only work completed during the official delivery phase (2026-09-18 through 2026-10-09) should be presented to judges as hackathon-period work.
 
-## Limitations and next production work
-
-Production identity/key separation, authenticated multi-organization operation, custody/payment integration, dispute handling, comprehensive adversarial contract review, monitoring, and audited deployment are outside this local demo. The current delivery's Daml/runtime compatibility remains to be proven on an executable Canton environment.
+## Final links
+Populate only when public and verified:
+- Repository:
+- Live/demo page:
+- Demo video:
+- Pitch:
+- Evidence bundle:
