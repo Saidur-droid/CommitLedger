@@ -26,3 +26,10 @@ test('verification avoids tee pipelines and checks command status explicitly', (
   assert.match(verify, /status=\$\?/);
   assert.match(verify, /return "\$status"/);
 });
+
+
+test('proof shell scripts use explicit status control', () => {
+  assert.ok(wrapper.includes('set +e'));
+  assert.ok(verify.includes('if "$@" >"$logfile" 2>&1; then'));
+  assert.equal(verify.includes('set +e'), false);
+});
