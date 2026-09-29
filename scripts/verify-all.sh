@@ -5,7 +5,7 @@ mkdir -p evidence
 rm -f evidence/verification.json
 export PATH="${DPM_HOME:-$HOME/.dpm}/bin:$PATH"
 export DPM_SDK_VERSION=3.5.12
-SOURCE_COMMIT=${GITHUB_SHA:-$(git rev-parse HEAD)}
+SOURCE_COMMIT=$(git rev-parse HEAD)
 node --version | tee evidence/node-version.log
 npm test 2>&1 | tee evidence/node-tests.log
 if ! command -v dpm >/dev/null 2>&1; then
