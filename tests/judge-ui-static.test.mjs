@@ -20,3 +20,10 @@ test('judge UI identifies Track 1 and keeps runtime proof evidence-first', () =>
   assert.match(html, /Track 1/);
   assert.match(html, /No sample transaction IDs or simulated settlement success/);
 });
+
+test('judge cockpit exposes source authorization settlement and runtime summary', () => {
+  for (const label of ['Source','Authorization','Settlement','Runtime']) {
+    assert.match(html, new RegExp(label));
+  }
+  assert.match(html, /Runtime[\s\S]*BLOCKED/);
+});
