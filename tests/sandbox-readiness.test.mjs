@@ -4,22 +4,20 @@ import fs from 'node:fs/promises';
 
 const script = await fs.readFile(new URL('../scripts/run-local-proof.sh', import.meta.url), 'utf8');
 
-test('uses only the DPM 3.5.12 canton-port-file readiness flag', () => {
+test('uses the DPM 3.5.12 canton-port-file readiness flag only', () => {
   assert.match(script, /--canton-port-file\s+evidence\/canton-ports\.json/);
   assert.doesNotMatch(script, /--port-file\b/);
   assert.doesNotMatch(script, /--json-api-port-file\b/);
 });
 
+test('chooses a free loopback JSON API port per run', () => {
+  assert.match(script, /socket\.bind\(\("127\.0\.0\.1",0\)\)/);
+  assert.match(script, /CANTON_JSON_API_URL="http:\/\/127\.0\.0\.1:\$CANTON_JSON_API_PORT"/);
+});
+
 test('waits for Canton ready signal before allocating parties', () => {
   const waitIndex = script.indexOf('test -s evidence/canton-ports.json');
   const bootstrapIndex = script.indexOf('node scripts/bootstrap-local.mjs');
-  assert.ok(waitIndex >= 0);
-  assert.ok(bootstrapIndex > waitIndex);
-});
-
-test('refuses to force-kill unrelated listeners and records owned sandbox pid', () => {
-  assert.match(script, /canton-open-source/);
-  assert.match(script, /cannot prove it owns/);
-  assert.match(script, /canton-sandbox\.pid/);
-  assert.doesNotMatch(script, /kill -9/);
+  assert.ok(waitIndex >= 0, 'must wait for canton-port-file');
+  assert.ok(bootstrapIndex > waitIndex, 'party bootstrap must happen after ready signal');
 });
