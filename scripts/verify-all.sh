@@ -29,13 +29,13 @@ if ! command -v dpm >/dev/null 2>&1; then
   echo 'BLOCKED: DPM is not installed. Run bash scripts/bootstrap-dpm.sh on an internet-connected development machine.' | tee evidence/daml-build.log
   exit 2
 fi
-run_logged evidence/dpm-version.log bash -lc 'cd daml && dpm version --active'
+run_logged evidence/dpm-version.log bash -c 'cd daml && dpm version --active'
 
 echo "=== STAGE 3/4: Daml build ==="
-run_logged evidence/daml-build.log bash -lc 'cd daml && dpm build'
+run_logged evidence/daml-build.log bash -c 'cd daml && dpm build'
 
 echo "=== STAGE 4/4: Daml tests ==="
-run_logged evidence/daml-tests.log bash -lc 'cd daml && dpm test'
+run_logged evidence/daml-tests.log bash -c 'cd daml && dpm test'
 
 SOURCE_COMMIT="$SOURCE_COMMIT" node -e 'require("node:fs").writeFileSync("evidence/verification.json",JSON.stringify({node:true,damlBuild:true,damlTests:true,verifiedAt:new Date().toISOString(),commit:process.env.SOURCE_COMMIT},null,2)+"\n")'
 echo "=== BUILD/TEST VERIFICATION COMPLETE ==="
