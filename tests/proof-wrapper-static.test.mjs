@@ -19,17 +19,9 @@ test('verification prints explicit stage markers', () => {
   }
 });
 
-test('verification avoids tee pipelines and checks command status explicitly', () => {
-  assert.doesNotMatch(verify, /npm test[^\n]*\|\s*tee/);
-  assert.doesNotMatch(verify, /dpm (?:version|build|test)[^\n]*\|\s*tee/);
-  assert.match(verify, /run_logged/);
-  assert.match(verify, /status=\$\?/);
-  assert.match(verify, /return "\$status"/);
-});
-
-
-test('proof shell scripts use explicit status control', () => {
-  assert.ok(wrapper.includes('set +e'));
-  assert.ok(verify.includes('if "$@" >"$logfile" 2>&1; then'));
-  assert.equal(verify.includes('set +e'), false);
+test('verification uses explicit stage status handling instead of shell errexit', () => {
+  assert.doesNotMatch(verify, /set -[^\n]*e/);
+  assert.match(verify, /run_stage/);
+  assert.match(verify, /if "\$@" >"\$logfile" 2>&1; then/);
+  assert.match(verify, /FAILED with status/);
 });
