@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { expectLedgerFailure } from "./ledger-errors.mjs";
 import { CantonJsonApi } from "./canton-json-api.mjs";
 import {
   templateId,
@@ -19,7 +21,7 @@ function required(value, name) {
 
 function offsetOf(result) {
   const offset = Number(result?.completionOffset);
-  if (!result?.updateId || !Number.isFinite(offset)) {
+  if (!result?.updateId || !Number.isSafeInteger(offset) || offset <= 0) {
     throw new Error("Canton submission did not return updateId and completionOffset");
   }
   return offset;
@@ -36,17 +38,8 @@ function proofStep(name, submission, event) {
   };
 }
 
-function roleClient(baseUrl, token) {
-  return new CantonJsonApi({ baseUrl, token });
-}
-
-async function expectLedgerFailure(name, action) {
-  try {
-    await action();
-  } catch (error) {
-    return { name, rejected: true, error: error.message };
-  }
-  throw new Error(`Expected Canton rejection did not occur: ${name}`);
+function roleClient(baseUrl, token, runtime) {
+  return new CantonJsonApi({ baseUrl, token, userId: runtime.userId || "", insecureLocal: runtime.insecureLocal || false });
 }
 
 async function submitAndFind({
@@ -75,8 +68,16 @@ async function submitAndFind({
 
 export function runtimeConfigFromEnv(env = process.env) {
   const fallbackToken = env.CANTON_TOKEN || "";
+  const insecureLocal = env.CANTON_INSECURE_LOCAL === "true";
+  const baseUrl = required(env.CANTON_JSON_API_URL, "CANTON_JSON_API_URL");
+  if (insecureLocal && !["localhost", "127.0.0.1", "[::1]"].includes(new URL(baseUrl).hostname)) {
+    throw new Error("insecure Canton mode requires loopback");
+  }
+  const token = (value, label) => insecureLocal ? String(value || "") : required(value, label);
   return {
-    baseUrl: required(env.CANTON_JSON_API_URL, "CANTON_JSON_API_URL"),
+    insecureLocal,
+    userId: env.CANTON_USER_ID || "",
+    baseUrl,
     packageId: required(env.CANTON_PACKAGE_ID, "CANTON_PACKAGE_ID"),
     parties: assertDistinctParties({
       maintainer: env.CANTON_MAINTAINER_PARTY,
@@ -84,9 +85,9 @@ export function runtimeConfigFromEnv(env = process.env) {
       verifier: env.CANTON_VERIFIER_PARTY
     }),
     tokens: {
-      maintainer: required(env.CANTON_MAINTAINER_TOKEN || fallbackToken, "CANTON_MAINTAINER_TOKEN or CANTON_TOKEN"),
-      contributor: required(env.CANTON_CONTRIBUTOR_TOKEN || fallbackToken, "CANTON_CONTRIBUTOR_TOKEN or CANTON_TOKEN"),
-      verifier: required(env.CANTON_VERIFIER_TOKEN || fallbackToken, "CANTON_VERIFIER_TOKEN or CANTON_TOKEN")
+      maintainer: token(env.CANTON_MAINTAINER_TOKEN || fallbackToken, "CANTON_MAINTAINER_TOKEN or CANTON_TOKEN"),
+      contributor: token(env.CANTON_CONTRIBUTOR_TOKEN || fallbackToken, "CANTON_CONTRIBUTOR_TOKEN or CANTON_TOKEN"),
+      verifier: token(env.CANTON_VERIFIER_TOKEN || fallbackToken, "CANTON_VERIFIER_TOKEN or CANTON_TOKEN")
     }
   };
 }
@@ -102,8 +103,11 @@ export async function runFullLifecycle({
   now = () => new Date()
 }) {
   const { baseUrl, packageId, parties, tokens } = runtime;
+  const runId = randomUUID();
+  contributorGithub = required(contributorGithub, "contributorGithub");
   const issue = await fetchGitHubIssue({ issueUrl, token: githubToken });
   const bounty = validateBountyDraft({
+    bountyId: `demo-${runId}`,
     repository: issue.repository,
     issueNumber: issue.issueNumber,
     issueUrl: issue.issueUrl,
@@ -112,16 +116,32 @@ export async function runFullLifecycle({
     rewardUnit: "DEMO_CREDIT"
   });
 
-  const maintainerApi = roleClient(baseUrl, tokens.maintainer);
-  const contributorApi = roleClient(baseUrl, tokens.contributor);
-  const verifierApi = roleClient(baseUrl, tokens.verifier);
+  const evidence = await fetchVerifiedPullRequest({
+    repository: bounty.repository,
+    prNumber: Number(prNumber),
+    token: githubToken,
+    expected: {
+      baseBranch,
+      contributorGithub,
+      issueNumber: bounty.issueNumber
+    }
+  });
+
+  const maintainerApi = roleClient(baseUrl, tokens.maintainer, runtime);
+  const contributorApi = roleClient(baseUrl, tokens.contributor, runtime);
+  const verifierApi = roleClient(baseUrl, tokens.verifier, runtime);
   const proof = {
+    schemaVersion: 2,
+    runId,
+    packageId,
+    generatedAt: now().toISOString(),
+    environment: runtime.insecureLocal ? "local-sandbox-no-auth" : "authenticated-ledger",
     issue,
     bounty,
     parties,
     steps: [],
     negativeChecks: [],
-    mergeEvidence: null,
+    mergeEvidence: evidence,
     settlementReceipt: null
   };
 
@@ -173,18 +193,6 @@ export async function runFullLifecycle({
   });
   proof.steps.push(proofStep("CLAIMED", claimAccepted.submission, claimAccepted.event));
 
-  const evidence = await fetchVerifiedPullRequest({
-    repository: bounty.repository,
-    prNumber: Number(prNumber),
-    token: githubToken,
-    expected: {
-      baseBranch,
-      contributorGithub,
-      issueNumber: bounty.issueNumber
-    }
-  });
-  proof.mergeEvidence = evidence;
-
   const pullRequest = {
     repository: evidence.repository,
     prNumber: evidence.prNumber,
@@ -219,7 +227,8 @@ export async function runFullLifecycle({
       actAs: [parties.verifier],
       workflowId: "commitledger-negative-wrong-issue",
       commandId: `negative-wrong-issue-${Date.now()}`
-    })
+    }),
+    { codes: ["DAML_UNHANDLED_EXCEPTION", "DAML_INTERPRETATION_ERROR"], contains: "evidence issue number mismatch" }
   ));
 
   const verified = await submitAndFind({
@@ -251,7 +260,8 @@ export async function runFullLifecycle({
       actAs: [parties.contributor],
       workflowId: "commitledger-negative-unauthorized-settle",
       commandId: `negative-unauthorized-settle-${Date.now()}`
-    })
+    }),
+    { codes: ["DAML_AUTHORIZATION_ERROR"] }
   ));
 
   const settled = await submitAndFind({
@@ -283,7 +293,8 @@ export async function runFullLifecycle({
       actAs: [parties.maintainer],
       workflowId: "commitledger-negative-duplicate-settle",
       commandId: `negative-duplicate-settle-${Date.now()}`
-    })
+    }),
+    { codes: ["CONTRACT_NOT_FOUND", "CONTRACT_NOT_ACTIVE"], contains: verified.event.contractId }
   ));
 
   return proof;

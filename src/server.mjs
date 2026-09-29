@@ -1,204 +1,89 @@
-import http from "node:http";
-import { readFile } from "node:fs/promises";
-import { extname, join, normalize } from "node:path";
-import { fileURLToPath } from "node:url";
-import { fetchGitHubIssue, fetchVerifiedPullRequest } from "./github-verifier.mjs";
-import { validateBountyDraft } from "./domain.mjs";
-import {
-  buildCreateBountyCommand,
-  buildClaimRequestCommand,
-  buildAcceptClaimCommand,
-  buildSubmitPullRequestCommand,
-  buildReturnForRevisionCommand,
-  buildVerifyMergedCommand,
-  buildSettleCommand
-} from "./canton-commands.mjs";
-import { CantonJsonApi } from "./canton-json-api.mjs";
-import { runtimeConfigFromEnv, runFullLifecycle } from "./orchestrator.mjs";
-
-const root = fileURLToPath(new URL("../web/", import.meta.url));
-const port = Number(process.env.PORT || 4173);
-
-function json(res, status, payload) {
-  const body = JSON.stringify(payload, null, 2);
-  res.writeHead(status, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Content-Length": Buffer.byteLength(body),
-    "Cache-Control": "no-store"
-  });
-  res.end(body);
+import http from 'node:http';
+import {readFile} from 'node:fs/promises';
+import {extname,resolve,sep} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {fetchGitHubIssue,fetchVerifiedPullRequest} from './github-verifier.mjs';
+import {validateBountyDraft} from './domain.mjs';
+import * as builders from './canton-commands.mjs';
+import {CantonJsonApi} from './canton-json-api.mjs';
+import {runtimeConfigFromEnv,runFullLifecycle} from './orchestrator.mjs';
+const root=fileURLToPath(new URL('../web/',import.meta.url));
+const actions=Object.freeze({createBounty:'buildCreateBountyCommand',claimRequest:'buildClaimRequestCommand',acceptClaim:'buildAcceptClaimCommand',submitPullRequest:'buildSubmitPullRequestCommand',returnForRevision:'buildReturnForRevisionCommand',verifyMerged:'buildVerifyMergedCommand',settle:'buildSettleCommand'});
+function json(res,status,payload) {
+  res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
+  res.end(JSON.stringify(payload,null,2));
 }
-
 async function readJson(req) {
-  let body = "";
-  for await (const chunk of req) {
-    body += chunk;
-    if (body.length > 1_000_000) throw new Error("request body too large");
-  }
-  return body ? JSON.parse(body) : {};
+  let length=0;const chunks=[];
+  for await(const chunk of req) {length+=chunk.length;if(length>1_000_000) throw new Error('request body too large');chunks.push(chunk);}
+  const value=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');
+  if(!value || typeof value!=='object' || Array.isArray(value)) throw new Error('invalid JSON object');
+  return value;
 }
-
-function contentType(path) {
-  return ({
-    ".html": "text/html; charset=utf-8",
-    ".css": "text/css; charset=utf-8",
-    ".js": "text/javascript; charset=utf-8",
-    ".svg": "image/svg+xml"
-  })[extname(path)] || "application/octet-stream";
-}
-
-async function serveStatic(urlPath, res) {
-  const clean = normalize(urlPath === "/" ? "/index.html" : urlPath).replace(/^([.][.][/\\])+/, "");
-  const target = join(root, clean);
-  if (!target.startsWith(root)) return json(res, 403, { error: "forbidden" });
-  try {
-    const body = await readFile(target);
-    res.writeHead(200, { "Content-Type": contentType(target), "Cache-Control": "no-store" });
-    res.end(body);
-  } catch {
-    json(res, 404, { error: "not found" });
-  }
-}
-
-function cantonConfigured() {
-  return Boolean(process.env.CANTON_JSON_API_URL && (process.env.CANTON_TOKEN || process.env.CANTON_MAINTAINER_TOKEN));
-}
-
-function lifecycleConfigured() {
-  try {
-    runtimeConfigFromEnv();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function cantonApi() {
-  const token = process.env.CANTON_TOKEN || process.env.CANTON_MAINTAINER_TOKEN;
-  if (!process.env.CANTON_JSON_API_URL || !token) return null;
-  return new CantonJsonApi({ baseUrl: process.env.CANTON_JSON_API_URL, token });
-}
-
-async function submitCanton(command, actAs, workflowId) {
-  const api = cantonApi();
-  if (!api) throw new Error("Canton LocalNet is not configured");
-  return api.submitAndWait({
-    commands: [command],
-    actAs,
-    workflowId,
-    commandId: `commitledger-${workflowId}-${Date.now()}`
+export function createAppServer(env=process.env) {
+  return http.createServer(async(req,res)=>{
+    try {
+      const origin=`http://${req.headers.host||'localhost'}`;
+      const url=new URL(req.url,origin);
+      if(!['127.0.0.1','localhost','[::1]'].includes(url.hostname)) return json(res,403,{error:'Loopback host required'});
+      if(req.method==='POST') {
+        if(req.headers.origin && req.headers.origin!==origin) return json(res,403,{error:'Cross-origin write rejected'});
+        if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||'')) return json(res,415,{error:'application/json is required'});
+      }
+      if(req.method==='GET' && url.pathname==='/api/health') {
+        let runtime;let configurationError='';let ledgerReachable=false;
+        try {runtime=runtimeConfigFromEnv(env);} catch(error) {configurationError=error.message;}
+        if(runtime) {
+          try {
+            const api=new CantonJsonApi({baseUrl:runtime.baseUrl,token:runtime.tokens.maintainer,userId:runtime.userId,insecureLocal:runtime.insecureLocal});
+            await api.request('/v2/state/ledger-end',{signal:AbortSignal.timeout(3000)});
+            ledgerReachable=true;
+          } catch { /* Connectivity is separate from configuration and ledger proof. */ }
+        }
+        return json(res,200,{ok:true,service:'CommitLedger',lifecycleConfigured:Boolean(runtime),cantonConfigured:Boolean(runtime),ledgerReachable,configurationError,githubAuthenticated:Boolean(env.GITHUB_TOKEN),packageConfigured:Boolean(env.CANTON_PACKAGE_ID)});
+      }
+      if(req.method==='POST' && url.pathname==='/api/canton/submit-command') {
+        return json(res,403,{error:'Arbitrary browser-supplied ledger commands are disabled; use the verified lifecycle'});
+      }
+      if(req.method==='POST' && url.pathname==='/api/bounty/prepare') {
+        const input=await readJson(req);
+        const issue=await fetchGitHubIssue({issueUrl:input.issueUrl,token:env.GITHUB_TOKEN});
+        const bounty=validateBountyDraft({...issue,rewardAmount:input.rewardAmount,rewardUnit:'DEMO_CREDIT'});
+        return json(res,200,{ok:true,issue,bounty});
+      }
+      if(req.method==='POST' && url.pathname==='/api/github/verify') {
+        const input=await readJson(req);
+        const evidence=await fetchVerifiedPullRequest({repository:input.repository,prNumber:Number(input.prNumber),token:env.GITHUB_TOKEN,expected:{headSha:input.headSha||'',mergeCommitSha:input.mergeCommitSha||'',baseBranch:input.baseBranch||'main',contributorGithub:input.contributorGithub||'',issueNumber:Number(input.issueNumber)}});
+        return json(res,200,{ok:true,evidence});
+      }
+      if(req.method==='POST' && url.pathname==='/api/demo/run') {
+        let runtime;
+        try {runtime=runtimeConfigFromEnv(env);} catch(error) {return json(res,503,{error:`Canton setup pending: ${error.message}`});}
+        const input=await readJson(req);
+        const proof=await runFullLifecycle({runtime,issueUrl:input.issueUrl,rewardAmount:Number(input.rewardAmount||100),contributorGithub:input.contributorGithub,prNumber:Number(input.prNumber),baseBranch:input.baseBranch||'main',githubToken:env.GITHUB_TOKEN||''});
+        return json(res,200,{ok:true,proof});
+      }
+      if(req.method==='POST' && url.pathname==='/api/canton/build-command') {
+        const input=await readJson(req);
+        const builder=Object.hasOwn(actions,input.action) ? builders[actions[input.action]] : null;
+        if(typeof builder!=='function') return json(res,400,{error:'Unknown Canton action'});
+        const command=builder({...input.payload,packageId:env.CANTON_PACKAGE_ID||input.packageId});
+        return json(res,200,{ok:true,command});
+      }
+      if(req.method!=='GET') return json(res,405,{error:'method not allowed'});
+      const target=resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
+      if(!target.startsWith(resolve(root)+sep)) return json(res,403,{error:'forbidden'});
+      try {
+        const body=await readFile(target);
+        res.writeHead(200,{'Content-Type':({'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml'})[extname(target)]||'application/octet-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
+        res.end(body);
+      } catch {json(res,404,{error:'not found'});}
+    } catch(error) {
+      json(res,/required|invalid|mismatch|must|Unknown|distinct|JSON|too large/.test(error.message)?400:502,{error:error.message});
+    }
   });
 }
-
-const server = http.createServer(async (req, res) => {
-  try {
-    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-
-    if (req.method === "GET" && url.pathname === "/api/health") {
-      return json(res, 200, {
-        ok: true,
-        service: "CommitLedger",
-        cantonConfigured: cantonConfigured(),
-        lifecycleConfigured: lifecycleConfigured(),
-        githubAuthenticated: Boolean(process.env.GITHUB_TOKEN),
-        packageConfigured: Boolean(process.env.CANTON_PACKAGE_ID)
-      });
-    }
-
-    if (req.method === "POST" && url.pathname === "/api/bounty/prepare") {
-      const input = await readJson(req);
-      const issue = await fetchGitHubIssue({ issueUrl: input.issueUrl, token: process.env.GITHUB_TOKEN });
-      const bounty = validateBountyDraft({
-        repository: issue.repository,
-        issueNumber: issue.issueNumber,
-        issueUrl: issue.issueUrl,
-        title: input.title || issue.title,
-        rewardAmount: input.rewardAmount,
-        rewardUnit: "DEMO_CREDIT"
-      });
-      return json(res, 200, { ok: true, issue, bounty });
-    }
-
-    if (req.method === "POST" && url.pathname === "/api/github/verify") {
-      const input = await readJson(req);
-      const evidence = await fetchVerifiedPullRequest({
-        repository: input.repository,
-        prNumber: Number(input.prNumber),
-        token: process.env.GITHUB_TOKEN,
-        expected: {
-          headSha: input.headSha || "",
-          baseBranch: input.baseBranch || "",
-          contributorGithub: input.contributorGithub || "",
-          issueNumber: Number(input.issueNumber)
-        }
-      });
-      return json(res, 200, { ok: true, evidence });
-    }
-
-    if (req.method === "POST" && url.pathname === "/api/demo/run") {
-      if (!lifecycleConfigured()) {
-        return json(res, 503, { error: "Full Canton lifecycle is not configured. Set package, party and token environment variables." });
-      }
-      const input = await readJson(req);
-      const proof = await runFullLifecycle({
-        runtime: runtimeConfigFromEnv(),
-        issueUrl: input.issueUrl,
-        rewardAmount: Number(input.rewardAmount || 100),
-        contributorGithub: input.contributorGithub,
-        prNumber: Number(input.prNumber),
-        baseBranch: input.baseBranch || "main",
-        githubToken: process.env.GITHUB_TOKEN || ""
-      });
-      return json(res, 200, { ok: true, proof });
-    }
-
-    if (req.method === "POST" && url.pathname === "/api/canton/build-command") {
-      const input = await readJson(req);
-      const packageId = input.packageId || process.env.CANTON_PACKAGE_ID;
-      if (!packageId) throw new Error("CANTON_PACKAGE_ID is required");
-      let command;
-      switch (input.action) {
-        case "createBounty":
-          command = buildCreateBountyCommand({ packageId, ...input.payload });
-          break;
-        case "claimRequest":
-          command = buildClaimRequestCommand({ packageId, ...input.payload });
-          break;
-        case "acceptClaim":
-          command = buildAcceptClaimCommand({ packageId, ...input.payload });
-          break;
-        case "submitPullRequest":
-          command = buildSubmitPullRequestCommand({ packageId, ...input.payload });
-          break;
-        case "returnForRevision":
-          command = buildReturnForRevisionCommand({ packageId, ...input.payload });
-          break;
-        case "verifyMerged":
-          command = buildVerifyMergedCommand({ packageId, ...input.payload });
-          break;
-        case "settle":
-          command = buildSettleCommand({ packageId, ...input.payload });
-          break;
-        default:
-          throw new Error("Unknown Canton action");
-      }
-      return json(res, 200, { ok: true, command });
-    }
-
-    if (req.method === "POST" && url.pathname === "/api/canton/submit-command") {
-      const input = await readJson(req);
-      const result = await submitCanton(input.command, input.actAs, input.workflowId || "web");
-      return json(res, 200, { ok: true, result });
-    }
-
-    if (req.method === "GET") return serveStatic(url.pathname, res);
-    json(res, 405, { error: "method not allowed" });
-  } catch (error) {
-    const status = /not configured|required|invalid|mismatch|must|Unknown|distinct/.test(error.message) ? 400 : 500;
-    json(res, status, { error: error.message });
-  }
-});
-
-server.listen(port, "127.0.0.1", () => {
-  console.log(`CommitLedger running at http://127.0.0.1:${port}`);
-});
+if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
+  const port=Number(process.env.PORT||4173);
+  createAppServer().listen(port,'127.0.0.1',()=>console.log(`CommitLedger running at http://127.0.0.1:${port}`));
+}

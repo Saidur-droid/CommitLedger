@@ -1,156 +1,49 @@
-const bountyForm = document.querySelector("#bounty-form");
-const verifyForm = document.querySelector("#verify-form");
-const liveForm = document.querySelector("#live-form");
-const liveRun = document.querySelector("#live-run");
-const liveStatus = document.querySelector("#live-status");
-const timeline = document.querySelector("#timeline");
-const receiptCard = document.querySelector("#receipt-card");
-const issueStatus = document.querySelector("#issue-status");
-const githubStatus = document.querySelector("#github-status");
-const cantonBadge = document.querySelector("#canton-badge");
-const bountySummary = document.querySelector("#bounty-summary");
-const githubOutput = document.querySelector("#github-output");
-
-let health = {};
-
-async function request(path, options = {}) {
-  const response = await fetch(path, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+const $=selector=>document.querySelector(selector);
+let ready=false,lastProof=null;
+const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+async function request(path,body) {
+  const response=await fetch(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
+  const value=await response.json();
+  if(!response.ok) throw new Error(value.error||'Request failed');
+  return value;
+}
+async function health() {
+  try {
+    const h=await request('/api/health');ready=h.lifecycleConfigured && h.ledgerReachable;
+    $('#canton-badge').textContent=ready?'Canton connected':'Canton setup pending';
+    $('#live-status').textContent=ready?'Ready for a real ledger run':h.lifecycleConfigured?'Ledger unreachable':'Runtime not configured';
+    $('#configuration-note').textContent=h.configurationError||(!h.ledgerReachable?'Check that your Canton development ledger is running.':'Connected. No settlement has been claimed until a receipt is returned.');
+  } catch(error) {ready=false;$('#canton-badge').textContent='Local app offline';$('#configuration-note').textContent=error.message;}
+  $('#live-run').disabled=!ready;
+}
+$('#refresh-health').addEventListener('click',health);
+const names={BOUNTY_ON_LEDGER:'Bounty created',CLAIM_REQUESTED:'Claim requested',CLAIMED:'Claim accepted',PR_SUBMITTED:'Pull request submitted',VERIFIED:'Merge verified',SETTLED:'Settlement recorded'};
+function render(proof) {
+  $('#timeline').innerHTML=proof.steps.map((step,i)=>`<article class="timeline-step"><strong>${i+1}. ${escape(names[step.name]||step.name)}</strong><span>Ledger offset ${escape(step.completionOffset)}</span><details><summary>Inspect full ledger references</summary><span>Contract ID</span><code>${escape(step.contractId)}</code><span>Update ID</span><code>${escape(step.updateId)}</code><span>Template</span><code>${escape(step.templateId)}</code></details></article>`).join('');
+  const r=proof.settlementReceipt;
+  $('#receipt-card').classList.remove('hidden');
+  $('#receipt-card').innerHTML=`<p class="kicker">SETTLEMENT RECEIPT / DEMO VALUE</p><h3>${escape(r.rewardAmount)} ${escape(r.rewardUnit)}</h3><div class="receipt-grid"><div><span>Repository and issue</span><strong>${escape(r.repository)} #${escape(r.issueNumber)}</strong></div><div><span>Pull request</span><strong>#${escape(r.pullRequest.prNumber)}</strong></div><div><span>Merge commit SHA</span><code>${escape(r.mergeCommitSha)}</code></div><div><span>Evidence hash</span><code>${escape(r.evidenceHash)}</code></div></div>${proof.negativeChecks.map(c=>`<div class="negative"><strong>${escape(c.name)}</strong><code>${escape(c.code)}</code><details><summary>Inspect rejection response</summary><pre class="output">${escape(JSON.stringify(c.response,null,2))}</pre></details></div>`).join('')}<button type="button" id="download-proof">Download complete proof JSON</button><p class="muted">${escape(proof.environment)}. This receipt does not represent a transfer of real money.</p>`;
+  $('#download-proof').addEventListener('click',()=>{
+    const url=URL.createObjectURL(new Blob([JSON.stringify(lastProof,null,2)+'\n'],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download=`commitledger-proof-${lastProof.runId}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Request failed");
-  return data;
 }
-
-async function checkHealth() {
-  try {
-    health = await request("/api/health");
-    cantonBadge.textContent = health.lifecycleConfigured ? "Canton lifecycle ready" : "Canton setup pending";
-    liveStatus.textContent = health.lifecycleConfigured ? "Ready for real ledger run" : "Runtime not configured";
-    liveRun.disabled = !health.lifecycleConfigured;
-  } catch {
-    cantonBadge.textContent = "Local app offline";
-    liveStatus.textContent = "Offline";
-    liveRun.disabled = true;
-  }
-}
-
-liveForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!health.lifecycleConfigured) return;
-  liveRun.disabled = true;
-  liveStatus.textContent = "Submitting to Canton…";
-  timeline.innerHTML = '<div class="timeline-empty">Executing real ledger transitions. No mocked steps are shown.</div>';
-  receiptCard.classList.add("hidden");
-  try {
-    const input = Object.fromEntries(new FormData(liveForm));
-    input.prNumber = Number(input.prNumber);
-    input.rewardAmount = Number(input.rewardAmount);
-    const data = await request("/api/demo/run", {
-      method: "POST",
-      body: JSON.stringify(input)
-    });
-    liveStatus.textContent = "Settlement receipt verified";
-    renderTimeline(data.proof.steps);
-    renderReceipt(data.proof);
-  } catch (error) {
-    liveStatus.textContent = "Ledger run failed";
-    timeline.innerHTML = `<div class="timeline-error">${escapeHtml(error.message)}</div>`;
-  } finally {
-    liveRun.disabled = !health.lifecycleConfigured;
-  }
+$('#live-form').addEventListener('submit',async event=>{
+  event.preventDefault();if(!ready)return;
+  lastProof=null;$('#live-run').disabled=true;$('#receipt-card').classList.add('hidden');
+  $('#live-status').textContent='Executing real ledger commands';$('#timeline').innerHTML='<div class="timeline-empty">Waiting for actual Canton responses. No simulated success.</div>';
+  try {const data=await request('/api/demo/run',Object.fromEntries(new FormData(event.target)));lastProof=data.proof;render(lastProof);$('#live-status').textContent='Settlement receipt returned';}
+  catch(error){$('#live-status').textContent='Ledger run failed';$('#timeline').innerHTML=`<div class="timeline-error">${escape(error.message)}<p>No successful proof bundle was produced.</p></div>`;}
+  finally{$('#live-run').disabled=!ready;}
 });
-
-bountyForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  issueStatus.textContent = "Verifying";
-  bountySummary.className = "summary muted";
-  bountySummary.textContent = "Reading canonical GitHub issue…";
-  try {
-    const input = Object.fromEntries(new FormData(bountyForm));
-    input.rewardAmount = Number(input.rewardAmount);
-    const data = await request("/api/bounty/prepare", {
-      method: "POST",
-      body: JSON.stringify(input)
-    });
-    issueStatus.textContent = "Issue verified";
-    bountySummary.className = "summary";
-    bountySummary.innerHTML = `
-      <strong>${escapeHtml(data.bounty.title)}</strong>
-      <span>${escapeHtml(data.bounty.repository)} #${data.bounty.issueNumber}</span>
-      <span>${data.bounty.rewardAmount} ${escapeHtml(data.bounty.rewardUnit)} · demo/test value</span>
-    `;
-  } catch (error) {
-    issueStatus.textContent = "Rejected";
-    bountySummary.textContent = error.message;
-  }
+$('#bounty-form').addEventListener('submit',async event=>{
+  event.preventDefault();$('#issue-status').textContent='Verifying';
+  try {const {bounty}=await request('/api/bounty/prepare',Object.fromEntries(new FormData(event.target)));$('#issue-status').textContent='Issue verified';$('#bounty-summary').textContent=`${bounty.title} / ${bounty.repository} #${bounty.issueNumber} / ${bounty.rewardAmount} ${bounty.rewardUnit}`;}
+  catch(error){$('#issue-status').textContent='Verification failed';$('#bounty-summary').textContent=error.message;}
 });
-
-verifyForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  githubStatus.textContent = "Verifying";
-  githubOutput.textContent = "Reading canonical GitHub pull request…";
-  const values = Object.fromEntries(new FormData(verifyForm));
-  values.issueNumber = Number(values.issueNumber);
-  values.prNumber = Number(values.prNumber);
-  try {
-    const data = await request("/api/github/verify", {
-      method: "POST",
-      body: JSON.stringify(values)
-    });
-    githubStatus.textContent = "Merge verified";
-    githubOutput.textContent = JSON.stringify(data.evidence, null, 2);
-  } catch (error) {
-    githubStatus.textContent = "Rejected";
-    githubOutput.textContent = error.message;
-  }
+$('#verify-form').addEventListener('submit',async event=>{
+  event.preventDefault();$('#github-status').textContent='Verifying';
+  try {const {evidence}=await request('/api/github/verify',Object.fromEntries(new FormData(event.target)));$('#github-status').textContent='Merge verified';$('#github-output').textContent=JSON.stringify(evidence,null,2);}
+  catch(error){$('#github-status').textContent='Verification failed';$('#github-output').textContent=error.message;}
 });
-
-function renderTimeline(steps) {
-  timeline.innerHTML = steps.map((step, index) => `
-    <article class="timeline-step">
-      <div class="step-index">${String(index + 1).padStart(2, "0")}</div>
-      <div>
-        <strong>${escapeHtml(step.name)}</strong>
-        <span>contract · ${escapeHtml(shortId(step.contractId))}</span>
-        <span>update · ${escapeHtml(shortId(step.updateId))} · offset ${step.completionOffset}</span>
-      </div>
-    </article>
-  `).join("");
-}
-
-function renderReceipt(proof) {
-  const receipt = proof.settlementReceipt || {};
-  receiptCard.classList.remove("hidden");
-  receiptCard.innerHTML = `
-    <p class="kicker">SETTLEMENT RECEIPT</p>
-    <h3>${escapeHtml(receipt.bountyId || "Settled bounty")}</h3>
-    <div class="receipt-grid">
-      <div><span>Repository</span><strong>${escapeHtml(receipt.repository || "")}</strong></div>
-      <div><span>Pull request</span><strong>#${receipt.pullRequest?.prNumber ?? ""}</strong></div>
-      <div><span>Reward</span><strong>${escapeHtml(receipt.rewardAmount || "")} ${escapeHtml(receipt.rewardUnit || "")}</strong></div>
-      <div><span>Evidence</span><strong>${escapeHtml(shortId(receipt.evidenceHash || ""))}</strong></div>
-      <div><span>Settlement ref</span><strong>${escapeHtml(receipt.settlementRef || "")}</strong></div>
-      <div><span>Canton proof</span><strong>${proof.steps.length} committed transitions</strong></div>
-      <div><span>Negative checks</span><strong>${proof.negativeChecks?.filter(check => check.rejected).length || 0} enforced rejections</strong></div>
-    </div>
-  `;
-}
-
-function shortId(value) {
-  const text = String(value || "");
-  return text.length > 22 ? `${text.slice(0, 10)}…${text.slice(-8)}` : text;
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[char]);
-}
-
-checkHealth();
+health();

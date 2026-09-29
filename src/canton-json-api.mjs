@@ -1,3 +1,5 @@
+import { CantonApiError } from "./ledger-errors.mjs";
+
 function requireText(value, name) {
   const text = String(value || "").trim();
   if (!text) throw new Error(`${name} is required`);
@@ -6,7 +8,7 @@ function requireText(value, name) {
 
 function authHeaders(token) {
   return {
-    Authorization: `Bearer ${requireText(token, "Canton token")}`,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     "Content-Type": "application/json"
   };
 }
@@ -41,15 +43,18 @@ export function extractCreatedEvents(activeContractsResponse) {
 }
 
 export class CantonJsonApi {
-  constructor({ baseUrl, token, applicationId = "commit-ledger" }) {
+  constructor({ baseUrl, token, userId = "", insecureLocal = false }) {
     this.baseUrl = requireText(baseUrl, "Canton base URL").replace(/\/$/, "");
-    this.token = requireText(token, "Canton token");
-    this.applicationId = applicationId;
+    const url = new URL(this.baseUrl);
+    if (insecureLocal && !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) throw new Error("insecure Canton mode requires loopback");
+    this.token = insecureLocal ? String(token || "") : requireText(token, "Canton token");
+    this.userId = userId;
   }
 
   async request(path, options = {}) {
     const response = await fetch(`${this.baseUrl}${path}`, {
       ...options,
+      signal: options.signal || AbortSignal.timeout(30_000),
       headers: {
         ...authHeaders(this.token),
         ...(options.headers || {})
@@ -60,7 +65,7 @@ export class CantonJsonApi {
     if (text) {
       try { body = JSON.parse(text); } catch { body = { raw: text }; }
     }
-    if (!response.ok) throw new Error(`Canton JSON Ledger API failed: ${response.status} ${text}`);
+    if (!response.ok) throw new CantonApiError(response.status, body);
     return body;
   }
 
@@ -70,14 +75,14 @@ export class CantonJsonApi {
       body: JSON.stringify({
         commands,
         workflowId,
-        applicationId: this.applicationId,
+        userId: this.userId,
         commandId,
         deduplicationPeriod: { Empty: {} },
         actAs,
         readAs,
         submissionId: commandId,
         disclosedContracts: [],
-        domainId: "",
+        synchronizerId: "",
         packageIdSelectionPreference: []
       })
     });
@@ -96,8 +101,10 @@ export class CantonJsonApi {
   async findActiveContract({ party, templateId, activeAtOffset, predicate = () => true }) {
     const raw = await this.activeContracts({ party, templateId, activeAtOffset });
     const events = extractCreatedEvents(raw);
-    const event = events.find(candidate => predicate(candidate?.createArgument || {}));
-    if (!event) throw new Error(`Active contract not found for template ${templateId} at offset ${activeAtOffset}`);
+    const matches = events.filter(candidate => candidate.templateId === templateId && predicate(candidate?.createArgument || {}));
+    if (matches.length > 1) throw new Error(`Ambiguous active contracts for template ${templateId}`);
+    const event = matches[0];
+    if (!event?.contractId) throw new Error(`Active contract not found for template ${templateId} at offset ${activeAtOffset}`);
     return event;
   }
 }

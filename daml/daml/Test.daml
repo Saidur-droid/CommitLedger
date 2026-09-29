@@ -49,6 +49,7 @@ mkEvidence = MergeEvidence with
   prUrl = "https://github.com/Saidur-droid/CommitLedger/pull/7"
   headSha = "abc123"
   baseBranch = "main"
+  mergeCommitSha = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
   merged = True
   mergedAt = "2026-09-27T00:00:00Z"
   evidenceHash = "sha256:demo-evidence"
@@ -87,6 +88,7 @@ testHappyPath = do
   receipt.bountyId === "bounty-001"
   receipt.rewardAmount === 100.0
   receipt.rewardUnit === "DEMO_CREDIT"
+  receipt.mergeCommitSha === "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
   receipt.evidenceHash === "sha256:demo-evidence"
   receipt.settlementRef === "demo-settlement-001"
 
@@ -128,6 +130,9 @@ testBadEvidenceFails = do
   submitMustFail verifier do
     exerciseCmd submittedCid SubmittedBounty_VerifyMerged with
       evidence = mkEvidence with issueNumber = 999
+  submitMustFail verifier do
+    exerciseCmd submittedCid SubmittedBounty_VerifyMerged with
+      evidence = mkEvidence with mergeCommitSha = ""
 
 testSettlementAuthorizationAndReplayProtection : Script ()
 testSettlementAuthorizationAndReplayProtection = do

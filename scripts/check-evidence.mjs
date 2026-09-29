@@ -1,0 +1,15 @@
+import {readFile} from 'node:fs/promises';
+import {buildMergeEvidence} from '../src/github-verifier.mjs';
+const verification=JSON.parse(await readFile('evidence/verification.json','utf8'));
+if(!verification.node || !verification.damlBuild || !verification.damlTests) throw new Error('Full build/test verification is missing');
+const proof=JSON.parse(await readFile('evidence/canton-proof.json','utf8'));
+if(proof.schemaVersion!==2 || !/^[a-f0-9]{64}$/.test(proof.packageId||'')) throw new Error('Real package ID and current proof schema are required');
+const names=['BOUNTY_ON_LEDGER','CLAIM_REQUESTED','CLAIMED','PR_SUBMITTED','VERIFIED','SETTLED'];
+if(proof.steps?.length!==6 || proof.steps.some((s,i)=>s.name!==names[i] || !s.updateId || !s.contractId || !Number.isSafeInteger(s.completionOffset))) throw new Error('Six complete ledger transitions are required');
+if(new Set(proof.steps.map(s=>s.contractId)).size!==6) throw new Error('Contract IDs must be distinct');
+if(proof.negativeChecks?.length!==3 || proof.negativeChecks.some(c=>!c.rejected || !c.code || !c.response)) throw new Error('Three structured rejection responses are required');
+if(proof.settlementReceipt?.rewardUnit!=='DEMO_CREDIT') throw new Error('Expected clearly labelled demo credit receipt');
+const hash=buildMergeEvidence(proof.mergeEvidence).evidenceHash;
+if(hash!==proof.mergeEvidence.evidenceHash || hash!==proof.settlementReceipt.evidenceHash) throw new Error('Receipt evidence hash mismatch');
+if(proof.settlementReceipt.mergeCommitSha!==proof.mergeEvidence.mergeCommitSha) throw new Error('Receipt merge commit mismatch');
+console.log('Technical evidence structure passes. This does not independently authenticate the ledger or clear organizer/video/submission gates.');

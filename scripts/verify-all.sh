@@ -1,31 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT"
-
-echo "== Node verifier tests =="
-node --version
-npm test
-
-echo
-echo "== Daml build =="
-export PATH="$HOME/.dpm/bin:$PATH"
-command -v dpm >/dev/null 2>&1 || {
-  echo "DPM not found. Run: bash scripts/bootstrap-dpm.sh"
+cd "$(dirname "$0")/.."
+mkdir -p evidence
+rm -f evidence/verification.json
+export PATH="${DPM_HOME:-$HOME/.dpm}/bin:$PATH"
+export DPM_SDK_VERSION=3.5.12
+node --version | tee evidence/node-version.log
+npm test 2>&1 | tee evidence/node-tests.log
+if ! command -v dpm >/dev/null 2>&1; then
+  echo 'BLOCKED: DPM is not installed. Run bash scripts/bootstrap-dpm.sh on an internet-connected development machine.' | tee evidence/daml-build.log
   exit 2
-}
-(
-  cd daml
-  DPM_SDK_VERSION=3.5.12 dpm build --all
-)
-
-echo
-echo "== Daml tests =="
-(
-  cd daml
-  DPM_SDK_VERSION=3.5.12 dpm test
-)
-
-echo
-echo "All local verification gates passed."
+fi
+(cd daml && dpm version --active) 2>&1 | tee evidence/dpm-version.log
+(cd daml && dpm build) 2>&1 | tee evidence/daml-build.log
+(cd daml && dpm test) 2>&1 | tee evidence/daml-tests.log
+node -e 'require("node:fs").writeFileSync("evidence/verification.json",JSON.stringify({node:true,damlBuild:true,damlTests:true,verifiedAt:new Date().toISOString(),commit:process.env.GITHUB_SHA||"local-working-tree"},null,2)+"\n")'

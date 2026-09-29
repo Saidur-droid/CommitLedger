@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-SDK_VERSION="3.5.12"
-
-if command -v dpm >/dev/null 2>&1; then
-  echo "DPM already installed: $(dpm --version || true)"
-  exit 0
+export PATH="${DPM_HOME:-$HOME/.dpm}/bin:$PATH"
+export DPM_EDITION=open-source
+if ! command -v dpm >/dev/null 2>&1; then
+  installer=$(mktemp)
+  trap 'rm -f "$installer"' EXIT
+  curl --fail --show-error --location --connect-timeout 15 --max-time 120 \
+    https://get.digitalasset.com/install/install.sh -o "$installer"
+  bash "$installer" 3.5.12
+else
+  dpm install 3.5.12
 fi
-
-echo "Installing open-source DPM SDK ${SDK_VERSION}..."
-curl -sSL https://get.digitalasset.com/install/install.sh | DPM_EDITION=open-source bash -s "${SDK_VERSION}"
-
-export PATH="$HOME/.dpm/bin:$PATH"
-
-echo "Installed:"
-dpm --version
+DPM_SDK_VERSION=3.5.12 dpm version
