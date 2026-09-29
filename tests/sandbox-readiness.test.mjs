@@ -11,7 +11,7 @@ test('uses the DPM 3.5.12 canton-port-file readiness flag only', () => {
 });
 
 test('chooses a free loopback JSON API port per run', () => {
-  assert.match(script, /socket\.bind\(\("127\.0\.0\.1",0\)\)/);
+  assert.match(script, /s\.bind\(\("127\.0\.0\.1",0\)\)/);
   assert.match(script, /CANTON_JSON_API_URL="http:\/\/127\.0\.0\.1:\$CANTON_JSON_API_PORT"/);
 });
 
