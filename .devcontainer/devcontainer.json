@@ -1,0 +1,32 @@
+{
+  "name": "CommitLedger Canton Proof",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "21"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    }
+  },
+  "postCreateCommand": "bash scripts/bootstrap-codespace.sh",
+  "forwardPorts": [4173, 3975],
+  "portsAttributes": {
+    "4173": {
+      "label": "CommitLedger judge UI",
+      "onAutoForward": "notify"
+    },
+    "3975": {
+      "label": "Canton JSON Ledger API",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": []
+    }
+  }
+}
