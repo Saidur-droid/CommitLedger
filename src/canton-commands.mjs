@@ -4,6 +4,37 @@ function requireText(value, name) {
   return text;
 }
 
+function damlInt(value, name) {
+  const number = Number(value);
+  if (!Number.isSafeInteger(number)) throw new Error(`${name} must be a safe integer`);
+  return String(number);
+}
+
+function normalizePullRequestRef(pullRequest) {
+  return {
+    repository: requireText(pullRequest?.repository, "pullRequest.repository"),
+    prNumber: damlInt(pullRequest?.prNumber, "pullRequest.prNumber"),
+    prUrl: requireText(pullRequest?.prUrl, "pullRequest.prUrl"),
+    headSha: requireText(pullRequest?.headSha, "pullRequest.headSha"),
+    baseBranch: requireText(pullRequest?.baseBranch, "pullRequest.baseBranch")
+  };
+}
+
+function normalizeMergeEvidence(evidence) {
+  return {
+    repository: requireText(evidence?.repository, "evidence.repository"),
+    issueNumber: damlInt(evidence?.issueNumber, "evidence.issueNumber"),
+    prNumber: damlInt(evidence?.prNumber, "evidence.prNumber"),
+    prUrl: requireText(evidence?.prUrl, "evidence.prUrl"),
+    headSha: requireText(evidence?.headSha, "evidence.headSha"),
+    mergeCommitSha: requireText(evidence?.mergeCommitSha, "evidence.mergeCommitSha"),
+    baseBranch: requireText(evidence?.baseBranch, "evidence.baseBranch"),
+    merged: Boolean(evidence?.merged),
+    mergedAt: requireText(evidence?.mergedAt, "evidence.mergedAt"),
+    evidenceHash: requireText(evidence?.evidenceHash, "evidence.evidenceHash")
+  };
+}
+
 export function templateId(packageId, template) {
   return `${requireText(packageId, "packageId")}:CommitLedger:${template}`;
 }
@@ -29,7 +60,7 @@ export function buildCreateBountyCommand({ packageId, maintainer, verifier, boun
     verifier: requireText(verifier, "verifier"),
     bountyId: requireText(bounty.bountyId, "bountyId"),
     repository: requireText(bounty.repository, "repository"),
-    issueNumber: Number(bounty.issueNumber),
+    issueNumber: damlInt(bounty.issueNumber, "issueNumber"),
     issueUrl: requireText(bounty.issueUrl, "issueUrl"),
     title: requireText(bounty.title, "title"),
     rewardAmount: requireText(bounty.rewardAmount, "rewardAmount"),
@@ -60,7 +91,7 @@ export function buildSubmitPullRequestCommand({ packageId, claimedBountyCid, pul
     templateId(packageId, "ClaimedBounty"),
     claimedBountyCid,
     "ClaimedBounty_SubmitPullRequest",
-    { pullRequest }
+    { pullRequest: normalizePullRequestRef(pullRequest) }
   );
 }
 
@@ -78,7 +109,7 @@ export function buildVerifyMergedCommand({ packageId, submittedBountyCid, eviden
     templateId(packageId, "SubmittedBounty"),
     submittedBountyCid,
     "SubmittedBounty_VerifyMerged",
-    { evidence }
+    { evidence: normalizeMergeEvidence(evidence) }
   );
 }
 
