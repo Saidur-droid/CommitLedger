@@ -12,22 +12,20 @@ const env={CANTON_JSON_API_URL:baseUrl,CANTON_INSECURE_LOCAL:'true',CANTON_PACKA
 if(!/^[a-f0-9]{64}$/.test(env.CANTON_PACKAGE_ID||'')) throw new Error('Actual DAR package ID is required');
 
 async function allocateParty(role) {
-  const body=JSON.stringify({partyIdHint:`CommitLedger-${role}-${suffix}`,identityProviderId:''});
-  let lastError;
+  const requestBody=JSON.stringify({partyIdHint:`CommitLedger-${role}-${suffix}`,identityProviderId:''});
   for(let attempt=1; attempt<=30; attempt+=1) {
     try {
-      const result=await api.request('/v2/parties',{method:'POST',body});
+      const result=await api.request('/v2/parties',{method:'POST',body:requestBody});
       const party=result.partyDetails?.party;
       if(!party) throw new Error(`Party allocation did not return partyDetails.party for ${role}`);
       return party;
     } catch(error) {
-      lastError=error;
-      const synchronizerRace=error instanceof CantonApiError && error.code==='PARTY_ALLOCATION_WITHOUT_CONNECTED_SYNCHRONIZER';
-      if(!synchronizerRace || attempt===30) throw error;
+      const transient=error instanceof CantonApiError && error.code==='PARTY_ALLOCATION_WITHOUT_CONNECTED_SYNCHRONIZER';
+      if(!transient || attempt===30) throw error;
       await delay(1000);
     }
   }
-  throw lastError;
+  throw new Error(`Party allocation retry loop exhausted for ${role}`);
 }
 
 const parties=[];
@@ -41,7 +39,8 @@ const userId=`commitledger-demo-${suffix}`;
 await api.request('/v2/users',{method:'POST',body:JSON.stringify({
   user:{id:userId,primaryParty:parties[0],identityProviderId:'',isDeactivated:false},
   rights:parties.flatMap(party=>[
-    {kind:{CanActAs:{value:{party}}}}, {kind:{CanReadAs:{value:{party}}}}
+    {kind:{CanActAs:{value:{party}}}},
+    {kind:{CanReadAs:{value:{party}}}}
   ])
 })});
 env.CANTON_USER_ID=userId;
