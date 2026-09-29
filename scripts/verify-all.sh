@@ -11,12 +11,14 @@ SOURCE_COMMIT=$(git rev-parse HEAD)
 run_logged() {
   local logfile=$1
   shift
-  set +e
-  "$@" >"$logfile" 2>&1
-  status=$?
-  set -e
-  cat "$logfile"
-  return "$status"
+  if "$@" >"$logfile" 2>&1; then
+    cat "$logfile"
+    return 0
+  else
+    status=$?
+    cat "$logfile"
+    return "$status"
+  fi
 }
 
 echo "=== STAGE 1/4: Node ==="
@@ -26,7 +28,8 @@ run_logged evidence/node-tests.log npm test
 
 echo "=== STAGE 2/4: DPM ==="
 if ! command -v dpm >/dev/null 2>&1; then
-  echo 'BLOCKED: DPM is not installed. Run bash scripts/bootstrap-dpm.sh on an internet-connected development machine.' | tee evidence/daml-build.log
+  echo 'BLOCKED: DPM is not installed. Run bash scripts/bootstrap-dpm.sh on an internet-connected development machine.' > evidence/daml-build.log
+  cat evidence/daml-build.log
   exit 2
 fi
 run_logged evidence/dpm-version.log bash -c 'cd daml && dpm version --active'
