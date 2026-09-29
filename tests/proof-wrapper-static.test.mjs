@@ -18,3 +18,11 @@ test('verification prints explicit stage markers', () => {
     assert.match(verify, new RegExp(marker));
   }
 });
+
+test('verification avoids tee pipelines and checks command status explicitly', () => {
+  assert.doesNotMatch(verify, /npm test[^\n]*\|\s*tee/);
+  assert.doesNotMatch(verify, /dpm (?:version|build|test)[^\n]*\|\s*tee/);
+  assert.match(verify, /run_logged/);
+  assert.match(verify, /status=\$\?/);
+  assert.match(verify, /return "\$status"/);
+});
