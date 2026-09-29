@@ -8,7 +8,7 @@ mkdir -p evidence
 rm -f evidence/canton-proof.json evidence/ledger-setup.json evidence/canton-ports.json evidence/ledger-end.json
 
 SOURCE_COMMIT=$(git rev-parse HEAD)
-export GITHUB_SHA="${GITHUB_SHA:-$SOURCE_COMMIT}"
+export GITHUB_SHA="$SOURCE_COMMIT"
 
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo 'Tracked working-tree changes detected. Commit or stash them before generating competition evidence.' >&2
