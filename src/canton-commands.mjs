@@ -35,8 +35,8 @@ function normalizeMergeEvidence(evidence) {
   };
 }
 
-export function templateId(packageId, template) {
-  return `${requireText(packageId, "packageId")}:CommitLedger:${template}`;
+export function templateId(packageName, template) {
+  return `#${requireText(packageName, "packageName")}:CommitLedger:${template}`;
 }
 
 export function createCommand(template, args) {
@@ -54,8 +54,8 @@ export function exerciseCommand(template, contractId, choice, choiceArgument = {
   };
 }
 
-export function buildCreateBountyCommand({ packageId, maintainer, verifier, bounty }) {
-  return createCommand(templateId(packageId, "Bounty"), {
+export function buildCreateBountyCommand({ packageName, maintainer, verifier, bounty }) {
+  return createCommand(templateId(packageName, "Bounty"), {
     maintainer: requireText(maintainer, "maintainer"),
     verifier: requireText(verifier, "verifier"),
     bountyId: requireText(bounty.bountyId, "bountyId"),
@@ -68,8 +68,8 @@ export function buildCreateBountyCommand({ packageId, maintainer, verifier, boun
   });
 }
 
-export function buildClaimRequestCommand({ packageId, contributor, maintainer, bountyId, contributorGithub }) {
-  return createCommand(templateId(packageId, "ClaimRequest"), {
+export function buildClaimRequestCommand({ packageName, contributor, maintainer, bountyId, contributorGithub }) {
+  return createCommand(templateId(packageName, "ClaimRequest"), {
     contributor: requireText(contributor, "contributor"),
     maintainer: requireText(maintainer, "maintainer"),
     bountyId: requireText(bountyId, "bountyId"),
@@ -77,45 +77,45 @@ export function buildClaimRequestCommand({ packageId, contributor, maintainer, b
   });
 }
 
-export function buildAcceptClaimCommand({ packageId, claimRequestCid, bountyCid }) {
+export function buildAcceptClaimCommand({ packageName, claimRequestCid, bountyCid }) {
   return exerciseCommand(
-    templateId(packageId, "ClaimRequest"),
+    templateId(packageName, "ClaimRequest"),
     claimRequestCid,
     "ClaimRequest_Accept",
     { bountyCid: requireText(bountyCid, "bountyCid") }
   );
 }
 
-export function buildSubmitPullRequestCommand({ packageId, claimedBountyCid, pullRequest }) {
+export function buildSubmitPullRequestCommand({ packageName, claimedBountyCid, pullRequest }) {
   return exerciseCommand(
-    templateId(packageId, "ClaimedBounty"),
+    templateId(packageName, "ClaimedBounty"),
     claimedBountyCid,
     "ClaimedBounty_SubmitPullRequest",
     { pullRequest: normalizePullRequestRef(pullRequest) }
   );
 }
 
-export function buildReturnForRevisionCommand({ packageId, submittedBountyCid, reason }) {
+export function buildReturnForRevisionCommand({ packageName, submittedBountyCid, reason }) {
   return exerciseCommand(
-    templateId(packageId, "SubmittedBounty"),
+    templateId(packageName, "SubmittedBounty"),
     submittedBountyCid,
     "SubmittedBounty_ReturnForRevision",
     { reason: requireText(reason, "reason") }
   );
 }
 
-export function buildVerifyMergedCommand({ packageId, submittedBountyCid, evidence }) {
+export function buildVerifyMergedCommand({ packageName, submittedBountyCid, evidence }) {
   return exerciseCommand(
-    templateId(packageId, "SubmittedBounty"),
+    templateId(packageName, "SubmittedBounty"),
     submittedBountyCid,
     "SubmittedBounty_VerifyMerged",
     { evidence: normalizeMergeEvidence(evidence) }
   );
 }
 
-export function buildSettleCommand({ packageId, verifiedBountyCid, settledAt, settlementRef }) {
+export function buildSettleCommand({ packageName, verifiedBountyCid, settledAt, settlementRef }) {
   return exerciseCommand(
-    templateId(packageId, "VerifiedBounty"),
+    templateId(packageName, "VerifiedBounty"),
     verifiedBountyCid,
     "VerifiedBounty_Settle",
     {
