@@ -39,6 +39,12 @@ test -f "$DAR"
 
 export CANTON_PACKAGE_ID
 CANTON_PACKAGE_ID=$(python3 scripts/dar-package-id.py "$DAR")
+export CANTON_PACKAGE_NAME
+CANTON_PACKAGE_NAME=$(sed -n 's/^name:[[:space:]]*//p' daml/daml.yaml | head -n 1 | tr -d '\r')
+if [ -z "$CANTON_PACKAGE_NAME" ]; then
+  echo 'Could not determine Daml package name from daml/daml.yaml.' >&2
+  exit 1
+fi
 
 CANTON_JSON_API_PORT=$(python3 - <<'PY'
 import socket
