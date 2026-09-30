@@ -4,81 +4,113 @@ Delivery branch: `fix/verified-delivery-20260929`.
 
 ## Current candidate
 
-- Candidate head after synchronizing `main`: `51e4ddd95a442fd11a8df80a867361db9b86c080`.
-- Branch relation: **68 commits ahead, 0 behind** `main`.
-- PR #8 remains **draft** and mergeable.
-- The synchronization incorporated `AGENTS.md` and `docs/PROJECT_MODE.md` from `main` with a real two-parent merge commit; no force push was used.
+- Exact current head: `722df9f69458cba0080d687105b4a0fb00f5c4d6`.
+- PR #8 is still open and draft. Keep it draft until submission-side gates below are completed.
+- Canonical Render service: `commitledger-proof-final`.
+- Canonical public service URL: https://commitledger-proof-final.onrender.com
+- Render deploy `dep-daucnqff3r2c73ep69u0` for the exact head above is **live**.
+- The older Render service `commitledger-proof` is a discarded/dummy duplicate and is not evidence of final delivery status.
 
-## Verified evidence
+## Verified technical proof
 
-- Original Node baseline: **16/16 passed**.
-- Expanded delivery suite: **65/65 passed** on commit `202693cbc10d835166fe3bf6240fa56e529ff1cd`.
-- A later Codespaces execution reported **74/74 Node tests passed**, DPM 3.5.12 executed, and the Daml DAR build succeeded before the final runtime hardening sweep.
-- Competition-readiness evaluator: **4/4 passed** in its isolated test-first fixture.
-- Judge-UI static acceptance tests: **3/3 passed** in their isolated test-first fixture.
-- Official HackCanton Season 3 Rules, Timeline, Tracks and Materials were rechecked on 2026-09-29.
+The exact current candidate has completed the provider-side proof path on Render.
 
-These historical results are strong implementation evidence but do **not** prove the current candidate head. Final proof must be generated from one run against the exact candidate source commit.
+Verified from the successful Render build/deploy:
 
-## Implemented
+- Node suite passes: **86/86**.
+- DPM **3.5.12** installs/runs.
+- Daml build passes and a fresh DAR is created.
+- Daml Script tests pass, including happy path and rejection/replay cases.
+- Java 21 runtime is bootstrapped for Daml Script execution.
+- A fresh local Canton sandbox starts and reports ready.
+- The DAR package ID is derived canonically from the built DAR using `dpm damlc inspect-dar --json`.
+- Three distinct local demo parties are allocated.
+- Real GitHub evidence fixture used by the proof is:
+  - open issue: `Saidur-droid/MergeEarn#69`
+  - merged PR: `Saidur-droid/MergeEarn#73`
+  - contributor: `Saidur-droid`
+  - target branch: `main`
+- The full Issue -> Bounty -> Claim -> PR -> Verify -> Settle -> SettlementReceipt lifecycle completes on Canton.
+- Wrong-evidence rejection is captured.
+- Unauthorized settlement rejection is captured.
+- Duplicate/replay settlement rejection is captured as a structured Canton `CONTRACT_NOT_FOUND` rejection.
+- The proof contains a real settlement receipt using clearly labelled non-production `DEMO_CREDIT`.
+- Verification and Canton proof are bound to one exact source commit.
+- Render build completes successfully.
+- The web service binds to Render correctly and the final deploy is live.
 
-### Verification and security
-- Repository-qualified issue references, canonical PR/merge-commit verification and target-branch reachability.
-- Merge commit SHA propagated through MergeEvidence and SettlementReceipt.
-- Structured Canton rejection classification: network, authentication, timeout, throttling and unknown infrastructure errors cannot be promoted into security proof.
-- Unique demo identities, unambiguous active-contract lookup and GitHub preflight before ledger writes.
-- Server-side origin/content-type protection and no arbitrary browser command submission using server-held ledger credentials.
-- Evidence provenance is bound to source commit and run identity; mixed evidence is rejected.
+This closes the technical runtime blocker that previously depended on a desktop/Codespace/GitHub Actions runner.
 
-### Competition readiness
-- Fail-closed `PASS / BLOCKED / FAIL` readiness engine.
-- External/account/publication gates remain BLOCKED until actually verified.
-- Track 1 business brief, pilot plan, pitch, AI disclosure and hackathon-period work disclosure are present.
-- Submission draft, judge runbook and final checklist are aligned to the competition design.
+## Important architecture notes
 
-### Judge experience
-- Judge UI exposes Track 1 positioning, competition readiness and all six judging criteria.
-- Runtime-sensitive states never display invented Canton transaction IDs or simulated success as real proof.
-- Desktop/mobile judge-flow design and <=5-minute evidence-led demo script are prepared.
+- The proof backend is Render provider-side execution, not GitHub Actions and not the user's desktop.
+- Render is authorized directly against the private CommitLedger repository; no other project repository is used as a runner or mirror.
+- The proof uses a local ephemeral Canton sandbox during the Render build. The public web service is the judge-facing web service; it does not claim a persistent production Canton deployment.
+- `DEMO_CREDIT` is test value only. No fiat, Canton Coin, MainNet, custody, revenue, customer traction, or organizer endorsement is claimed.
+- The old duplicate Render service `commitledger-proof` should be ignored and manually removed later if desired. The available Render connector cannot delete/suspend it.
 
-## Current blockers
+## Remaining work — do this next
 
-### Real Canton proof
-The only connected development device, `DESKTOP-KTDVO5M`, is currently **offline**. Because there is no active execution machine, the following cannot truthfully be produced in this session:
+The coding/runtime-debugging phase is effectively complete. Do not reopen architecture work unless a new concrete regression appears.
 
-- clean full-suite execution on the exact current candidate;
-- DPM/Daml build and Daml Script test logs on the exact current candidate;
-- DAR deployment to a live local Canton runtime;
-- real Issue -> Bounty -> Claim -> PR -> Verify -> Settle -> Receipt lifecycle;
-- exact wrong-evidence, unauthorized-settlement and duplicate/replay rejections;
-- coherent final evidence bundle from the same run and source commit;
-- browser/mobile QA against the running app;
-- final evidence-backed video.
+### 1. Evidence/status cleanup
+- Update PR #8 body so it no longer says the real Canton proof is missing.
+- Keep the exact successful commit/deploy IDs in the PR and submission notes.
+- Confirm no new code changes have invalidated the proof commit before recording the final video. If code changes after `722df9f...`, rerun the full proof on the new exact head.
 
-When an execution machine is available, the intended operator command is:
+### 2. Judge browser QA
+- Test the canonical Render URL on desktop.
+- Test the same judge flow on a narrow/mobile viewport.
+- Confirm the page loads without credentials.
+- Confirm IDs/evidence are legible and no secret/private data is exposed.
+- Test all final links in a logged-out/private browser window.
 
-```bash
-bash scripts/prove-and-report.sh
-```
+### 3. Final <=5-minute demo video
+Record only after browser QA passes. The video should show:
+1. problem + three roles;
+2. real GitHub issue/PR evidence;
+3. verified Canton six-step lifecycle;
+4. wrong-evidence / unauthorized / replay rejection;
+5. SettlementReceipt and `DEMO_CREDIT` disclaimer;
+6. why Canton is necessary;
+7. Track 1 business/pilot angle.
 
-A successful run must be retained under `evidence/` and validated before this status changes to ready.
+Review the full exported video before publishing.
 
-### GitHub Actions
-The latest observed GitHub Actions runs failed before recorded job steps began (`steps: []`). That is not evidence of a test assertion failure. The exact platform/account-level cause is not exposed by the current connector, so no billing, policy, runner or code cause is asserted without evidence.
+### 4. Public/submission materials
+Before submission:
+- make the repository accessible to a logged-out judge when ready;
+- publish/verify the demo video;
+- verify pitch/project page;
+- populate final repository/demo/video/pitch/evidence links in `docs/SUBMISSION_DRAFT.md`;
+- verify every URL from a private/logged-out browser.
 
-A new push has been created on 2026-09-30 after syncing `main`; CI for the new candidate must be evaluated when GitHub exposes the run.
+### 5. AppsFactory / competition account gates
+Still require human/account verification:
+- required 1,000 Mana;
+- minimum required platform activity;
+- project profile complete;
+- journal non-empty;
+- team/eligibility valid;
+- pre-existing code disclosure accurate;
+- hackathon-period work identifiable.
 
-### External competition gates
-Still intentionally unverified:
-- public repository/materials accessible to a logged-out judge;
-- AppsFactory 1,000 Mana;
-- minimum platform activity requirement;
-- project profile and journal;
-- team/account eligibility;
-- final portal submission and retained receipt.
+### 6. Final submission
+- Review the final submission wording against actual evidence only.
+- Submit through the competition portal.
+- Retain the submission/portal receipt.
+- Only after all mandatory gates pass should PR #8 be marked ready/merged and the project be called submission-ready.
 
-## Release decision
+## Resume instruction for the next session
 
-CommitLedger is **implementation-advanced but not yet runtime-verified or submission-ready**.
+Start here, in this order:
 
-Keep PR #8 draft. Do not merge, close issue #4, claim 100%, or submit until the exact candidate produces real Canton proof and the external competition gates are verified.
+1. Read this file and `docs/FINAL_CHECKLIST.md`.
+2. Confirm Render service `commitledger-proof-final` is still live on the current exact Git head.
+3. Do **not** repeat the old desktop/GitHub Actions debugging unless Render is unusable.
+4. Complete browser QA.
+5. Record/review the <=5-minute video.
+6. Complete public links and AppsFactory gates.
+7. Finish portal submission and retain receipt.
+
+Do not ask the owner to restate the technical history; this document is the handoff.
