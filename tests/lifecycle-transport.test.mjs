@@ -55,7 +55,7 @@ function installTransport(t, {unmerged=false,negativeNetworkFailure=false}={}) {
     seq++;
     const event={contractId:`unit-contract-${seq}`,templateId:`${'a'.repeat(64)}:CommitLedger:${name}`,createArgument:args};
     active.set(event.contractId,event);
-    if(transactionMode) return Response.json({transaction:{value:{updateId:`unit-update-${seq}`,offset:seq,events:[{CreatedEvent:event}]}}});
+    if(transactionMode) return Response.json({transaction:{updateId:`unit-update-${seq}`,offset:seq,events:[{CreatedEvent:event}]}});
     return Response.json({updateId:`unit-update-${seq}`,completionOffset:seq});
   });
   return {commands,active};
