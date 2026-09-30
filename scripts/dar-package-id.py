@@ -4,6 +4,7 @@ import json
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 if len(sys.argv) != 2:
     raise SystemExit("usage: dar-package-id.py <dar>")
@@ -27,4 +28,6 @@ package_id = payload.get("main_package_id")
 if not isinstance(package_id, str) or not re.fullmatch(r"[a-f0-9]{64}", package_id):
     raise SystemExit(f"inspect-dar returned invalid main_package_id: {package_id!r}")
 
+Path('evidence').mkdir(exist_ok=True)
+Path('evidence/dar-package-id.txt').write_text(package_id + '\n', encoding='utf-8')
 print(package_id)

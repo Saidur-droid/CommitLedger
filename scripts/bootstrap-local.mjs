@@ -1,5 +1,6 @@
 // This bootstrap ONLY targets an explicitly unauthenticated loopback demo ledger.
 import {writeFile} from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
 import {setTimeout as delay} from 'node:timers/promises';
 import {randomUUID} from 'node:crypto';
 import {CantonJsonApi} from '../src/canton-json-api.mjs';
@@ -8,7 +9,8 @@ import {CantonApiError} from '../src/ledger-errors.mjs';
 const baseUrl=process.env.CANTON_JSON_API_URL || 'http://127.0.0.1:3975';
 const api=new CantonJsonApi({baseUrl,insecureLocal:true});
 const suffix=randomUUID().slice(0,8);
-const env={CANTON_JSON_API_URL:baseUrl,CANTON_INSECURE_LOCAL:'true',CANTON_PACKAGE_ID:process.env.CANTON_PACKAGE_ID,CANTON_PACKAGE_NAME:process.env.CANTON_PACKAGE_NAME || 'commit-ledger'};
+const fallbackPackageId=()=>readFileSync('evidence/dar-package-id.txt','utf8').trim();
+const env={CANTON_JSON_API_URL:baseUrl,CANTON_INSECURE_LOCAL:'true',CANTON_PACKAGE_ID:process.env.CANTON_PACKAGE_ID || fallbackPackageId(),CANTON_PACKAGE_NAME:process.env.CANTON_PACKAGE_NAME || 'commit-ledger'};
 if(!/^[a-f0-9]{64}$/.test(env.CANTON_PACKAGE_ID||'')) throw new Error('Actual DAR package ID is required');
 
 async function allocateParty(role) {
