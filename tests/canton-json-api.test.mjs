@@ -33,7 +33,7 @@ test("extracts active created events from Canton JSON API responses", () => {
 
 test("extracts created events from submit-and-wait transaction responses", () => {
   const events = extractTransactionCreatedEvents({
-    transaction: { value: {
+    transaction: {
       updateId: "unit-update",
       offset: 1,
       events: [{ CreatedEvent: {
@@ -41,7 +41,7 @@ test("extracts created events from submit-and-wait transaction responses", () =>
         templateId: "a".repeat(64) + ":CommitLedger:Bounty",
         createArgument: { bountyId: "bounty-5" }
       } }]
-    } }
+    }
   });
   assert.equal(events.length, 1);
   assert.equal(events[0].contractId, "00created");
