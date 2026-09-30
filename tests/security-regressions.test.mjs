@@ -125,3 +125,19 @@ test('active-contract lookup encodes activeAtOffset as a JSON int64', async t =>
   await api.activeContracts({party:'unit-party',templateId:'pkg:CommitLedger:Bounty',activeAtOffset:42});
   assert.equal(body.activeAtOffset,42);
 });
+
+test('submit-and-wait normalizes nested Daml numeric values to JSON strings', async t => {
+  let body;
+  t.mock.method(globalThis, 'fetch', async (_url, options) => { body = JSON.parse(options.body); return Response.json({}); });
+  const api = new CantonJsonApi({baseUrl:'http://localhost:3975',token:'unit-token'});
+  await api.submitAndWait({
+    commands:[{CreateCommand:{templateId:'pkg:CommitLedger:Bounty',createArguments:{issueNumber:5,rewardAmount:100.0,nested:{prNumber:6},items:[7]}}}],
+    actAs:['Maintainer::1'],
+    commandId:'unit-numeric-normalization'
+  });
+  const args = body.commands[0].CreateCommand.createArguments;
+  assert.equal(args.issueNumber, '5');
+  assert.equal(args.rewardAmount, '100');
+  assert.equal(args.nested.prNumber, '6');
+  assert.deepEqual(args.items, ['7']);
+});
