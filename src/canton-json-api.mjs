@@ -74,6 +74,14 @@ export function extractCreatedEvents(activeContractsResponse) {
     .filter(Boolean);
 }
 
+export function extractTransactionCreatedEvents(response) {
+  const events = response?.transaction?.events;
+  if (!Array.isArray(events)) return [];
+  return events
+    .map(event => event?.CreatedEvent?.value || event?.CreatedEvent)
+    .filter(Boolean);
+}
+
 export class CantonJsonApi {
   constructor({ baseUrl, token, userId = "", insecureLocal = false }) {
     this.baseUrl = requireText(baseUrl, "Canton base URL").replace(/\/$/, "");
@@ -116,6 +124,27 @@ export class CantonJsonApi {
         disclosedContracts: [],
         synchronizerId: "",
         packageIdSelectionPreference
+      })
+    });
+  }
+
+  async submitAndWaitForTransaction({ commands, actAs, readAs = [], workflowId, commandId, packageIdSelectionPreference = this.packageIdSelectionPreference || [] }) {
+    return this.request("/v2/commands/submit-and-wait-for-transaction", {
+      method: "POST",
+      body: JSON.stringify({
+        commands: {
+          commands: commands.map(encodeCommandDamlValues),
+          workflowId,
+          userId: this.userId,
+          commandId,
+          deduplicationPeriod: { Empty: {} },
+          actAs,
+          readAs,
+          submissionId: commandId,
+          disclosedContracts: [],
+          synchronizerId: "",
+          packageIdSelectionPreference
+        }
       })
     });
   }
