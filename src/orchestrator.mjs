@@ -39,7 +39,9 @@ function proofStep(name, submission, event) {
 }
 
 function roleClient(baseUrl, token, runtime) {
-  return new CantonJsonApi({ baseUrl, token, userId: runtime.userId || "", insecureLocal: runtime.insecureLocal || false });
+  const client = new CantonJsonApi({ baseUrl, token, userId: runtime.userId || "", insecureLocal: runtime.insecureLocal || false });
+  client.packageIdSelectionPreference = runtime.packageId ? [runtime.packageId] : [];
+  return client;
 }
 
 async function submitAndFind({
@@ -55,7 +57,8 @@ async function submitAndFind({
     commands: [command],
     actAs: [actAs],
     workflowId,
-    commandId: `${workflowId}-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    commandId: `${workflowId}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    packageIdSelectionPreference: client.packageIdSelectionPreference || []
   });
   const event = await client.findActiveContract({
     party: lookupParty,
@@ -79,6 +82,7 @@ export function runtimeConfigFromEnv(env = process.env) {
     userId: env.CANTON_USER_ID || "",
     baseUrl,
     packageId: required(env.CANTON_PACKAGE_ID, "CANTON_PACKAGE_ID"),
+    packageName: required(env.CANTON_PACKAGE_NAME || "commit-ledger", "CANTON_PACKAGE_NAME"),
     parties: assertDistinctParties({
       maintainer: env.CANTON_MAINTAINER_PARTY,
       contributor: env.CANTON_CONTRIBUTOR_PARTY,
@@ -102,7 +106,7 @@ export async function runFullLifecycle({
   githubToken = "",
   now = () => new Date()
 }) {
-  const { baseUrl, packageId, parties, tokens } = runtime;
+  const { baseUrl, packageId, packageName, parties, tokens } = runtime;
   const runId = randomUUID();
   contributorGithub = required(contributorGithub, "contributorGithub");
   const issue = await fetchGitHubIssue({ issueUrl, token: githubToken });
@@ -133,7 +137,8 @@ export async function runFullLifecycle({
   const proof = {
     schemaVersion: 2,
     runId,
-    packageId,
+    packageName,
+    packageName,
     generatedAt: now().toISOString(),
     environment: runtime.insecureLocal ? "local-sandbox-no-auth" : "authenticated-ledger",
     issue,
@@ -148,7 +153,7 @@ export async function runFullLifecycle({
   const bountyCreated = await submitAndFind({
     client: maintainerApi,
     command: buildCreateBountyCommand({
-      packageId,
+      packageName,
       maintainer: parties.maintainer,
       verifier: parties.verifier,
       bounty
@@ -156,7 +161,7 @@ export async function runFullLifecycle({
     actAs: parties.maintainer,
     workflowId: "commitledger-create-bounty",
     lookupParty: parties.maintainer,
-    lookupTemplateId: templateId(packageId, "Bounty"),
+    lookupTemplateId: templateId(packageName, "Bounty"),
     predicate: arg => arg.bountyId === bounty.bountyId
   });
   proof.steps.push(proofStep("BOUNTY_ON_LEDGER", bountyCreated.submission, bountyCreated.event));
@@ -164,7 +169,7 @@ export async function runFullLifecycle({
   const claimCreated = await submitAndFind({
     client: contributorApi,
     command: buildClaimRequestCommand({
-      packageId,
+      packageName,
       contributor: parties.contributor,
       maintainer: parties.maintainer,
       bountyId: bounty.bountyId,
@@ -173,7 +178,7 @@ export async function runFullLifecycle({
     actAs: parties.contributor,
     workflowId: "commitledger-claim-request",
     lookupParty: parties.contributor,
-    lookupTemplateId: templateId(packageId, "ClaimRequest"),
+    lookupTemplateId: templateId(packageName, "ClaimRequest"),
     predicate: arg => arg.bountyId === bounty.bountyId && arg.contributorGithub === contributorGithub
   });
   proof.steps.push(proofStep("CLAIM_REQUESTED", claimCreated.submission, claimCreated.event));
@@ -181,14 +186,14 @@ export async function runFullLifecycle({
   const claimAccepted = await submitAndFind({
     client: maintainerApi,
     command: buildAcceptClaimCommand({
-      packageId,
+      packageName,
       claimRequestCid: claimCreated.event.contractId,
       bountyCid: bountyCreated.event.contractId
     }),
     actAs: parties.maintainer,
     workflowId: "commitledger-accept-claim",
     lookupParty: parties.maintainer,
-    lookupTemplateId: templateId(packageId, "ClaimedBounty"),
+    lookupTemplateId: templateId(packageName, "ClaimedBounty"),
     predicate: arg => arg.bountyId === bounty.bountyId && arg.contributorGithub === contributorGithub
   });
   proof.steps.push(proofStep("CLAIMED", claimAccepted.submission, claimAccepted.event));
@@ -204,14 +209,14 @@ export async function runFullLifecycle({
   const submitted = await submitAndFind({
     client: contributorApi,
     command: buildSubmitPullRequestCommand({
-      packageId,
+      packageName,
       claimedBountyCid: claimAccepted.event.contractId,
       pullRequest
     }),
     actAs: parties.contributor,
     workflowId: "commitledger-submit-pr",
     lookupParty: parties.contributor,
-    lookupTemplateId: templateId(packageId, "SubmittedBounty"),
+    lookupTemplateId: templateId(packageName, "SubmittedBounty"),
     predicate: arg => arg.bountyId === bounty.bountyId && Number(arg.pullRequest?.prNumber) === Number(prNumber)
   });
   proof.steps.push(proofStep("PR_SUBMITTED", submitted.submission, submitted.event));
@@ -220,7 +225,7 @@ export async function runFullLifecycle({
     "wrong issue evidence rejected",
     () => verifierApi.submitAndWait({
       commands: [buildVerifyMergedCommand({
-        packageId,
+        packageName,
         submittedBountyCid: submitted.event.contractId,
         evidence: { ...evidence, issueNumber: evidence.issueNumber + 1000 }
       })],
@@ -234,14 +239,14 @@ export async function runFullLifecycle({
   const verified = await submitAndFind({
     client: verifierApi,
     command: buildVerifyMergedCommand({
-      packageId,
+      packageName,
       submittedBountyCid: submitted.event.contractId,
       evidence
     }),
     actAs: parties.verifier,
     workflowId: "commitledger-verify-merge",
     lookupParty: parties.verifier,
-    lookupTemplateId: templateId(packageId, "VerifiedBounty"),
+    lookupTemplateId: templateId(packageName, "VerifiedBounty"),
     predicate: arg => arg.bountyId === bounty.bountyId && arg.evidence?.evidenceHash === evidence.evidenceHash
   });
   proof.steps.push(proofStep("VERIFIED", verified.submission, verified.event));
@@ -252,7 +257,7 @@ export async function runFullLifecycle({
     "unauthorized contributor settlement rejected",
     () => contributorApi.submitAndWait({
       commands: [buildSettleCommand({
-        packageId,
+        packageName,
         verifiedBountyCid: verified.event.contractId,
         settledAt,
         settlementRef: "unauthorized-attempt"
@@ -267,7 +272,7 @@ export async function runFullLifecycle({
   const settled = await submitAndFind({
     client: maintainerApi,
     command: buildSettleCommand({
-      packageId,
+      packageName,
       verifiedBountyCid: verified.event.contractId,
       settledAt,
       settlementRef
@@ -275,7 +280,7 @@ export async function runFullLifecycle({
     actAs: parties.maintainer,
     workflowId: "commitledger-settle",
     lookupParty: parties.maintainer,
-    lookupTemplateId: templateId(packageId, "SettlementReceipt"),
+    lookupTemplateId: templateId(packageName, "SettlementReceipt"),
     predicate: arg => arg.bountyId === bounty.bountyId && arg.evidenceHash === evidence.evidenceHash
   });
   proof.steps.push(proofStep("SETTLED", settled.submission, settled.event));
@@ -285,7 +290,7 @@ export async function runFullLifecycle({
     "duplicate settlement rejected",
     () => maintainerApi.submitAndWait({
       commands: [buildSettleCommand({
-        packageId,
+        packageName,
         verifiedBountyCid: verified.event.contractId,
         settledAt,
         settlementRef: "duplicate-attempt"
