@@ -1,8 +1,11 @@
 /** Fail closed: connectivity, authentication and unknown errors are not security proof. */
 export class CantonApiError extends Error {
   constructor(status, body) {
-    const code = typeof body?.code === "string" ? body.code : "UNKNOWN_CANTON_ERROR";
+    const rawCode = typeof body?.code === "string" ? body.code : "UNKNOWN_CANTON_ERROR";
     const cause = typeof body?.cause === "string" ? body.cause : "Unrecognized Canton error response";
+    const code = rawCode === "DAML_FAILURE" && cause.includes("UNHANDLED_EXCEPTION/")
+      ? "DAML_UNHANDLED_EXCEPTION"
+      : rawCode;
     super(`Canton JSON Ledger API failed: ${status} ${code}: ${cause}`);
     this.name = "CantonApiError";
     this.status = status;
