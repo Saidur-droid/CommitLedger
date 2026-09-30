@@ -1,15 +1,30 @@
 #!/usr/bin/env python3
-"""Read the main package hash from the actual built DAR, never from a placeholder."""
+"""Extract the main package ID from a built DAR using the Daml compiler's canonical inspect-dar output."""
+import json
 import re
+import subprocess
 import sys
-import zipfile
-with zipfile.ZipFile(sys.argv[1]) as dar:
-    manifest = dar.read('META-INF/MANIFEST.MF').decode('utf-8')
-manifest = re.sub(r'\r?\n ', '', manifest)
-main = re.search(r'^Main-Dalf:\s*(.+)$', manifest, re.MULTILINE)
-if not main:
-    raise SystemExit('Main-Dalf missing from DAR manifest')
-package = re.search(r'([a-f0-9]{64})\.dalf$', main.group(1).strip())
-if not package:
-    raise SystemExit('Cannot derive main package ID from DAR manifest')
-print(package.group(1))
+
+if len(sys.argv) != 2:
+    raise SystemExit("usage: dar-package-id.py <dar>")
+
+result = subprocess.run(
+    ["dpm", "damlc", "inspect-dar", "--json", sys.argv[1]],
+    check=False,
+    capture_output=True,
+    text=True,
+)
+if result.returncode != 0:
+    sys.stderr.write(result.stderr or result.stdout)
+    raise SystemExit(result.returncode or 1)
+
+try:
+    payload = json.loads(result.stdout)
+except json.JSONDecodeError as exc:
+    raise SystemExit(f"inspect-dar returned invalid JSON: {exc}") from exc
+
+package_id = payload.get("main_package_id")
+if not isinstance(package_id, str) or not re.fullmatch(r"[a-f0-9]{64}", package_id):
+    raise SystemExit(f"inspect-dar returned invalid main_package_id: {package_id!r}")
+
+print(package_id)
