@@ -10,7 +10,7 @@ import {
 
 test("builds a Daml Bounty create command with Int fields encoded as strings", () => {
   const command = buildCreateBountyCommand({
-    packageId: "pkg123",
+    packageName: "commit-ledger",
     maintainer: "Maintainer::1",
     verifier: "Verifier::1",
     bounty: {
@@ -23,14 +23,14 @@ test("builds a Daml Bounty create command with Int fields encoded as strings", (
       rewardUnit: "DEMO_CREDIT"
     }
   });
-  assert.equal(command.CreateCommand.templateId, "pkg123:CommitLedger:Bounty");
+  assert.equal(command.CreateCommand.templateId, "#commit-ledger:CommitLedger:Bounty");
   assert.equal(command.CreateCommand.createArguments.issueNumber, "5");
   assert.equal(command.CreateCommand.createArguments.rewardUnit, "DEMO_CREDIT");
 });
 
 test("encodes nested pull-request Int fields as strings for Daml values", () => {
   const command = buildSubmitPullRequestCommand({
-    packageId: "pkg123",
+    packageName: "commit-ledger",
     claimedBountyCid: "cid-claimed",
     pullRequest: {
       repository: "Saidur-droid/CommitLedger",
@@ -45,7 +45,7 @@ test("encodes nested pull-request Int fields as strings for Daml values", () => 
 
 test("builds the explicit revision path", () => {
   const command = buildReturnForRevisionCommand({
-    packageId: "pkg123",
+    packageName: "commit-ledger",
     submittedBountyCid: "cid-submitted",
     reason: "Update tests"
   });
@@ -67,7 +67,7 @@ test("binds issue-aware canonical merge evidence with Daml Int strings", () => {
     evidenceHash: "sha256:abc"
   };
   const command = buildVerifyMergedCommand({
-    packageId: "pkg123",
+    packageName: "commit-ledger",
     submittedBountyCid: "cid-submitted",
     evidence
   });
@@ -78,7 +78,7 @@ test("binds issue-aware canonical merge evidence with Daml Int strings", () => {
 
 test("settlement is an explicit consuming Daml choice", () => {
   const command = buildSettleCommand({
-    packageId: "pkg123",
+    packageName: "commit-ledger",
     verifiedBountyCid: "cid-verified",
     settledAt: "2026-09-27T10:00:00Z",
     settlementRef: "settlement-001"
