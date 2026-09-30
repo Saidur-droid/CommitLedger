@@ -101,20 +101,22 @@ test('Canton client preserves structured error details', async t => {
 test('Canton commands use v2 userId and synchronizerId names', async t => {
   let body;
   t.mock.method(globalThis, 'fetch', async (_url, options) => {body=JSON.parse(options.body);return Response.json({});});
-  await new CantonJsonApi({baseUrl:'http://localhost:3975',token:'unit-token'}).submitAndWait({commands:[],actAs:[],commandId:'unit'});
+  const client=new CantonJsonApi({baseUrl:'http://localhost:3975',token:'unit-token'}); client.packageIdSelectionPreference=['a'.repeat(64)];
+  await client.submitAndWait({commands:[],actAs:[],commandId:'unit'});
   assert.ok('userId' in body && 'synchronizerId' in body);
   assert.equal('applicationId' in body, false);
   assert.equal('domainId' in body, false);
+  assert.deepEqual(body.packageIdSelectionPreference,['a'.repeat(64)]);
 });
 test('insecure sandbox configuration cannot target a remote server', () => {
   assert.throws(() => new CantonJsonApi({baseUrl:'https://remote.example',insecureLocal:true}), /loopback/);
   assert.throws(() => runtimeConfigFromEnv({CANTON_JSON_API_URL:'https://remote.example',CANTON_INSECURE_LOCAL:'true'}), /loopback/);
 });
 test('ambiguous active contracts cannot silently choose an old demo receipt', async t => {
-  const entry = {contractEntry:{JsActiveContract:{createdEvent:{contractId:'unit-cid',templateId:'pkg:CommitLedger:Bounty',createArgument:{}}}}};
+  const entry = {contractEntry:{JsActiveContract:{createdEvent:{contractId:'unit-cid',templateId:'a'.repeat(64)+':CommitLedger:Bounty',createArgument:{}}}}};
   t.mock.method(globalThis, 'fetch', async () => Response.json([entry,entry]));
   const api=new CantonJsonApi({baseUrl:'http://localhost:3975',token:'unit-token'});
-  await assert.rejects(api.findActiveContract({party:'unit-party',templateId:'pkg:CommitLedger:Bounty',activeAtOffset:1}), /Ambiguous/);
+  await assert.rejects(api.findActiveContract({party:'unit-party',templateId:'#commit-ledger:CommitLedger:Bounty',activeAtOffset:1}), /Ambiguous/);
 });
 
 
@@ -131,7 +133,7 @@ test('submit-and-wait normalizes nested Daml numeric values to JSON strings', as
   t.mock.method(globalThis, 'fetch', async (_url, options) => { body = JSON.parse(options.body); return Response.json({}); });
   const api = new CantonJsonApi({baseUrl:'http://localhost:3975',token:'unit-token'});
   await api.submitAndWait({
-    commands:[{CreateCommand:{templateId:'pkg:CommitLedger:Bounty',createArguments:{issueNumber:5,rewardAmount:100.0,nested:{prNumber:6},items:[7]}}}],
+    commands:[{CreateCommand:{templateId:'#commit-ledger:CommitLedger:Bounty',createArguments:{issueNumber:5,rewardAmount:100.0,nested:{prNumber:6},items:[7]}}}],
     actAs:['Maintainer::1'],
     commandId:'unit-numeric-normalization'
   });
