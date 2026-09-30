@@ -11,6 +11,17 @@ rm -f evidence/canton-proof.json evidence/ledger-setup.json evidence/canton-port
 SOURCE_COMMIT=$(git rev-parse HEAD)
 export GITHUB_SHA="$SOURCE_COMMIT"
 
+CURRENT_BRANCH=$(git branch --show-current)
+if [ -n "$CURRENT_BRANCH" ]; then
+  git fetch --quiet origin "$CURRENT_BRANCH" || true
+  REMOTE_COMMIT=$(git rev-parse "origin/$CURRENT_BRANCH" 2>/dev/null || true)
+  if [ -n "$REMOTE_COMMIT" ] && [ "$REMOTE_COMMIT" != "$SOURCE_COMMIT" ]; then
+    echo "BLOCKED: stale checkout. Local $SOURCE_COMMIT, origin/$CURRENT_BRANCH $REMOTE_COMMIT." >&2
+    echo "Run: git reset --hard origin/$CURRENT_BRANCH" >&2
+    exit 3
+  fi
+fi
+
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo 'Tracked working-tree changes detected. Commit or stash them before generating competition evidence.' >&2
   exit 2
