@@ -1,8 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = resolve(new URL("..", import.meta.url).pathname, "..");
+const root = fileURLToPath(new URL("..", import.meta.url));
 process.chdir(root);
 mkdirSync("evidence", { recursive: true });
 rmSync("evidence/verification.json", { force: true });
