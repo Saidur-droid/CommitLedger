@@ -96,8 +96,23 @@ source .env.canton-demo.local
 set +a
 export COMMITLEDGER_EVIDENCE_FILE="$PWD/evidence/canton-proof.json"
 
+echo "=== STAGE 5/6: Real Canton lifecycle ==="
 npm run demo:full 2>&1 | tee evidence/canton-demo.log
+status=${PIPESTATUS[0]}
+if [ "$status" -ne 0 ]; then
+  echo "=== STAGE 5/6: Real Canton lifecycle: FAILED with status $status ===" >&2
+  exit "$status"
+fi
+echo "=== STAGE 5/6: Real Canton lifecycle: PASS ==="
+
+echo "=== STAGE 6/6: Evidence validation ==="
 node scripts/check-evidence.mjs
+status=$?
+if [ "$status" -ne 0 ]; then
+  echo "=== STAGE 6/6: Evidence validation: FAILED with status $status ===" >&2
+  exit "$status"
+fi
+echo "=== STAGE 6/6: Evidence validation: PASS ==="
 
 if [ "${COMMITLEDGER_SERVE_AFTER_PROOF:-false}" = true ]; then
   npm start
