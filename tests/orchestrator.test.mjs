@@ -22,6 +22,7 @@ test("runtime config supports one local token or role-specific tokens", () => {
     CANTON_CONTRIBUTOR_PARTY: "Contributor::1",
     CANTON_VERIFIER_PARTY: "Verifier::1"
   });
+  assert.equal(config.packageName, "commit-ledger");
   assert.equal(config.tokens.maintainer, "local-admin-token");
   assert.equal(config.tokens.contributor, "local-admin-token");
   assert.equal(config.tokens.verifier, "local-admin-token");
