@@ -101,7 +101,7 @@ export class CantonJsonApi {
     return body;
   }
 
-  async submitAndWait({ commands, actAs, readAs = [], workflowId, commandId, packageIdSelectionPreference = [] }) {
+  async submitAndWait({ commands, actAs, readAs = [], workflowId, commandId, packageIdSelectionPreference = this.packageIdSelectionPreference || [] }) {
     return this.request("/v2/commands/submit-and-wait", {
       method: "POST",
       body: JSON.stringify({
