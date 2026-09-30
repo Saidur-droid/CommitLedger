@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {runFullLifecycle} from '../src/orchestrator.mjs';
 const repository='Saidur-droid/CommitLedger';
 const parties={maintainer:'Maintainer::unit',contributor:'Contributor::unit',verifier:'Verifier::unit'};
-const runtime={baseUrl:'http://localhost:3975',packageId:'unit-package',parties,tokens:{maintainer:'unit-maintainer',contributor:'unit-contributor',verifier:'unit-verifier'}};
+const runtime={baseUrl:'http://localhost:3975',packageId:'a'.repeat(64),packageName:'commit-ledger',parties,tokens:{maintainer:'unit-maintainer',contributor:'unit-contributor',verifier:'unit-verifier'}};
 const input={runtime,issueUrl:`https://github.com/${repository}/issues/5`,contributorGithub:'Saidur-droid',prNumber:6};
 function installTransport(t, {unmerged=false,negativeNetworkFailure=false}={}) {
   const active=new Map(); const commands=[]; let seq=0;
@@ -17,12 +17,11 @@ function installTransport(t, {unmerged=false,negativeNetworkFailure=false}={}) {
       throw new Error(`Unexpected GitHub URL: ${url}`);
     }
     const body=JSON.parse(options.body);
-    if(url.endsWith('/v2/state/active-contracts')) {
-      return Response.json([...active.values()].map(createdEvent=>({contractEntry:{JsActiveContract:{createdEvent}}})));
-    }
-    assert.ok(url.endsWith('/v2/commands/submit-and-wait'));
-    commands.push(body);
-    const command=body.commands[0]; let name,args;
+    const transactionMode=url.endsWith('/v2/commands/submit-and-wait-for-transaction');
+    assert.ok(transactionMode || url.endsWith('/v2/commands/submit-and-wait'));
+    const payload=transactionMode ? body.commands : body;
+    commands.push(payload);
+    const command=payload.commands[0]; let name,args;
     if(command.CreateCommand) {
       name=command.CreateCommand.templateId.split(':').at(-1);
       args=command.CreateCommand.createArguments;
@@ -32,30 +31,31 @@ function installTransport(t, {unmerged=false,negativeNetworkFailure=false}={}) {
       if(!previous) return Response.json({code:'CONTRACT_NOT_FOUND',cause:`Contract ${ex.contractId} already consumed`},{status:404});
       args={...previous.createArgument};
       if(ex.choice==='ClaimRequest_Accept') {
-        assert.equal(body.actAs[0],parties.maintainer);
+        assert.equal(payload.actAs[0],parties.maintainer);
         const bounty=active.get(ex.choiceArgument.bountyCid);
         assert.ok(bounty,'exact prior bounty CID must be carried forward');
         args={...bounty.createArgument,contributor:args.contributor,contributorGithub:args.contributorGithub};
         active.delete(ex.choiceArgument.bountyCid); name='ClaimedBounty';
       } else if(ex.choice==='ClaimedBounty_SubmitPullRequest') {
-        assert.equal(body.actAs[0],parties.contributor);
+        assert.equal(payload.actAs[0],parties.contributor);
         args.pullRequest=ex.choiceArgument.pullRequest; name='SubmittedBounty';
       } else if(ex.choice==='SubmittedBounty_VerifyMerged') {
-        assert.equal(body.actAs[0],parties.verifier);
+        assert.equal(payload.actAs[0],parties.verifier);
         if(ex.choiceArgument.evidence.issueNumber!==args.issueNumber) {
           if(negativeNetworkFailure) throw new TypeError('fetch failed');
           return Response.json({code:'DAML_UNHANDLED_EXCEPTION',cause:'evidence issue number mismatch'},{status:400});
         }
         args.evidence=ex.choiceArgument.evidence;name='VerifiedBounty';
       } else if(ex.choice==='VerifiedBounty_Settle') {
-        if(body.actAs[0]!==parties.maintainer) return Response.json({code:'DAML_AUTHORIZATION_ERROR',cause:'wrong controller'},{status:400});
+        if(payload.actAs[0]!==parties.maintainer) return Response.json({code:'DAML_AUTHORIZATION_ERROR',cause:'wrong controller'},{status:400});
         args={...args,...ex.choiceArgument,evidenceHash:args.evidence.evidenceHash,mergeCommitSha:args.evidence.mergeCommitSha};name='SettlementReceipt';
       } else throw new Error(`Unexpected choice ${ex.choice}`);
       active.delete(ex.contractId);
     }
     seq++;
-    const event={contractId:`unit-contract-${seq}`,templateId:`unit-package:CommitLedger:${name}`,createArgument:args};
+    const event={contractId:`unit-contract-${seq}`,templateId:`${'a'.repeat(64)}:CommitLedger:${name}`,createArgument:args};
     active.set(event.contractId,event);
+    if(transactionMode) return Response.json({transaction:{updateId:`unit-update-${seq}`,offset:seq,events:[{CreatedEvent:{value:event}}]}});
     return Response.json({updateId:`unit-update-${seq}`,completionOffset:seq});
   });
   return {commands,active};
