@@ -7,7 +7,9 @@ import {validateBountyDraft} from './domain.mjs';
 import * as builders from './canton-commands.mjs';
 import {CantonJsonApi} from './canton-json-api.mjs';
 import {runtimeConfigFromEnv,runFullLifecycle} from './orchestrator.mjs';
-const root=fileURLToPath(new URL('../web/',import.meta.url));
+const projectRoot=fileURLToPath(new URL('../',import.meta.url));
+const root=resolve(projectRoot,'web');
+const evidenceRoot=resolve(projectRoot,'evidence');
 const actions=Object.freeze({createBounty:'buildCreateBountyCommand',claimRequest:'buildClaimRequestCommand',acceptClaim:'buildAcceptClaimCommand',submitPullRequest:'buildSubmitPullRequestCommand',returnForRevision:'buildReturnForRevisionCommand',verifyMerged:'buildVerifyMergedCommand',settle:'buildSettleCommand'});
 function json(res,status,payload) {
   res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
@@ -19,6 +21,21 @@ async function readJson(req) {
   const value=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');
   if(!value || typeof value!=='object' || Array.isArray(value)) throw new Error('invalid JSON object');
   return value;
+}
+async function readVerifiedProof() {
+  const [proofRaw,verificationRaw]=await Promise.all([
+    readFile(resolve(evidenceRoot,'canton-proof.json'),'utf8'),
+    readFile(resolve(evidenceRoot,'verification.json'),'utf8')
+  ]);
+  const proof=JSON.parse(proofRaw);
+  const verification=JSON.parse(verificationRaw);
+  if(!/^[a-f0-9]{40}$/.test(proof.sourceCommit||'') || proof.sourceCommit!==verification.commit) {
+    throw new Error('deployed proof artifacts are not source-commit coherent');
+  }
+  if(proof.steps?.length!==6 || proof.negativeChecks?.length!==3 || !proof.settlementReceipt) {
+    throw new Error('deployed proof artifacts are incomplete');
+  }
+  return {proof,verification};
 }
 export function createAppServer(env=process.env) {
   return http.createServer(async(req,res)=>{
@@ -34,6 +51,14 @@ export function createAppServer(env=process.env) {
         if(req.headers.origin && req.headers.origin!==origin) return json(res,403,{error:'Cross-origin write rejected'});
         if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||'')) return json(res,415,{error:'application/json is required'});
       }
+      if(req.method==='GET' && url.pathname==='/api/proof') {
+        try {
+          const {proof,verification}=await readVerifiedProof();
+          return json(res,200,{ok:true,proof,verification});
+        } catch {
+          return json(res,503,{error:'Verified deployment proof is not available'});
+        }
+      }
       if(req.method==='GET' && url.pathname==='/api/health') {
         let runtime;let configurationError='';let ledgerReachable=false;
         try {runtime=runtimeConfigFromEnv(env);} catch(error) {configurationError=error.message;}
@@ -44,7 +69,9 @@ export function createAppServer(env=process.env) {
             ledgerReachable=true;
           } catch { /* Connectivity is separate from configuration and ledger proof. */ }
         }
-        return json(res,200,{ok:true,service:'CommitLedger',lifecycleConfigured:Boolean(runtime),cantonConfigured:Boolean(runtime),ledgerReachable,configurationError,githubAuthenticated:Boolean(env.GITHUB_TOKEN),packageConfigured:Boolean(env.CANTON_PACKAGE_ID)});
+        let verifiedProofAvailable=false;
+        try {await readVerifiedProof();verifiedProofAvailable=true;} catch { /* Build proof is optional outside verified deployments. */ }
+        return json(res,200,{ok:true,service:'CommitLedger',lifecycleConfigured:Boolean(runtime),cantonConfigured:Boolean(runtime),ledgerReachable,verifiedProofAvailable,configurationError,githubAuthenticated:Boolean(env.GITHUB_TOKEN),packageConfigured:Boolean(env.CANTON_PACKAGE_ID)});
       }
       if(req.method==='POST' && url.pathname==='/api/canton/submit-command') {
         return json(res,403,{error:'Arbitrary browser-supplied ledger commands are disabled; use the verified lifecycle'});

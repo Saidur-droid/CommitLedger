@@ -12,6 +12,10 @@ test('health never calls unconfigured Canton ready',async t=>{
   const base=await withServer(t);const value=await (await fetch(base+'/api/health')).json();
   assert.equal(value.lifecycleConfigured,false);assert.equal(value.ledgerReachable,false);
 });
+test('verified proof endpoint fails closed when build artifacts are absent',async t=>{
+  const base=await withServer(t);const response=await fetch(base+'/api/proof');
+  assert.equal(response.status,503);
+});
 test('unconfigured demo fails closed',async t=>{
   const base=await withServer(t);const response=await fetch(base+'/api/demo/run',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
   assert.equal(response.status,503);
