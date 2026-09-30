@@ -26,3 +26,21 @@ test('cross-origin writes and simple-form content types are rejected',async t=>{
   const b=await fetch(base+'/api/demo/run',{method:'POST',headers:{'Content-Type':'text/plain'},body:'{}'});
   assert.equal(b.status,415);
 });
+
+test('configured public host accepts Render-style forwarded HTTPS origin',async t=>{
+  const server=createAppServer({COMMITLEDGER_PUBLIC_HOST:'commitledger-proof-final.onrender.com'});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  t.after(()=>new Promise(resolve=>{server.close(resolve);server.closeAllConnections();}));
+  const port=server.address().port;
+  const response=await fetch(`http://127.0.0.1:${port}/api/demo/run`,{
+    method:'POST',
+    headers:{
+      Host:'commitledger-proof-final.onrender.com',
+      'X-Forwarded-Proto':'https',
+      Origin:'https://commitledger-proof-final.onrender.com',
+      'Content-Type':'application/json'
+    },
+    body:'{}'
+  });
+  assert.equal(response.status,503);
+});
