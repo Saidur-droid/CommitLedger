@@ -92,7 +92,7 @@ export class CantonJsonApi {
     return this.request("/v2/state/active-contracts", {
       method: "POST",
       body: JSON.stringify({
-        activeAtOffset: String(activeAtOffset),
+        activeAtOffset: Number(activeAtOffset),
         eventFormat: eventFormatForParty(party, templateId)
       })
     });
