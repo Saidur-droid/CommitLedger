@@ -101,7 +101,7 @@ export class CantonJsonApi {
     return body;
   }
 
-  async submitAndWait({ commands, actAs, readAs = [], workflowId, commandId }) {
+  async submitAndWait({ commands, actAs, readAs = [], workflowId, commandId, packageIdSelectionPreference = [] }) {
     return this.request("/v2/commands/submit-and-wait", {
       method: "POST",
       body: JSON.stringify({
@@ -115,7 +115,7 @@ export class CantonJsonApi {
         submissionId: commandId,
         disclosedContracts: [],
         synchronizerId: "",
-        packageIdSelectionPreference: []
+        packageIdSelectionPreference
       })
     });
   }
@@ -133,7 +133,11 @@ export class CantonJsonApi {
   async findActiveContract({ party, templateId, activeAtOffset, predicate = () => true }) {
     const raw = await this.activeContracts({ party, templateId, activeAtOffset });
     const events = extractCreatedEvents(raw);
-    const matches = events.filter(candidate => candidate.templateId === templateId && predicate(candidate?.createArgument || {}));
+    const requestedEntity = String(templateId).split(':').slice(-2).join(':');
+    const matches = events.filter(candidate => {
+      const candidateEntity = String(candidate?.templateId || '').split(':').slice(-2).join(':');
+      return candidateEntity === requestedEntity && predicate(candidate?.createArgument || {});
+    });
     if (matches.length > 1) throw new Error(`Ambiguous active contracts for template ${templateId}`);
     const event = matches[0];
     if (!event?.contractId) throw new Error(`Active contract not found for template ${templateId} at offset ${activeAtOffset}`);
