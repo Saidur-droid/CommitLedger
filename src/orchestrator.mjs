@@ -60,7 +60,7 @@ async function submitAndFind({
     commandId: `${workflowId}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     packageIdSelectionPreference: client.packageIdSelectionPreference || []
   });
-  const transaction = response?.transaction;
+  const transaction = response?.transaction?.value;
   const offset = Number(transaction?.offset);
   if (!transaction?.updateId || !Number.isSafeInteger(offset) || offset <= 0) {
     throw new Error("Canton transaction response did not return updateId and offset");
