@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {request as httpRequest} from 'node:http';
 import {createAppServer} from '../src/server.mjs';
 async function withServer(t) {
   const server=createAppServer({});
@@ -32,15 +33,24 @@ test('configured public host accepts Render-style forwarded HTTPS origin',async 
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   t.after(()=>new Promise(resolve=>{server.close(resolve);server.closeAllConnections();}));
   const port=server.address().port;
-  const response=await fetch(`http://127.0.0.1:${port}/api/demo/run`,{
-    method:'POST',
-    headers:{
-      Host:'commitledger-proof-final.onrender.com',
-      'X-Forwarded-Proto':'https',
-      Origin:'https://commitledger-proof-final.onrender.com',
-      'Content-Type':'application/json'
-    },
-    body:'{}'
+  const result=await new Promise((resolve,reject)=>{
+    const req=httpRequest({
+      host:'127.0.0.1',
+      port,
+      path:'/api/demo/run',
+      method:'POST',
+      headers:{
+        Host:'commitledger-proof-final.onrender.com',
+        'X-Forwarded-Proto':'https',
+        Origin:'https://commitledger-proof-final.onrender.com',
+        'Content-Type':'application/json'
+      }
+    },res=>{
+      res.resume();
+      res.on('end',()=>resolve(res.statusCode));
+    });
+    req.on('error',reject);
+    req.end('{}');
   });
-  assert.equal(response.status,503);
+  assert.equal(result,503);
 });
