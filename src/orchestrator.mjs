@@ -56,7 +56,6 @@ async function submitAndFind({
   const response = await client.submitAndWaitForTransaction({
     commands: [command],
     actAs: [actAs],
-    readAs: [lookupParty],
     workflowId,
     commandId: `${workflowId}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     packageIdSelectionPreference: client.packageIdSelectionPreference || []
