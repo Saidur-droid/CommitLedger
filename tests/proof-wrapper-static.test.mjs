@@ -25,12 +25,15 @@ test('Node verifier owns all four deterministic verification stages', () => {
   for (const marker of ['STAGE 1/4: Node','STAGE 2/4: DPM','STAGE 3/4: Daml build','STAGE 4/4: Daml tests']) {
     assert.match(nodeVerify, new RegExp(marker.replaceAll('/', '\\/')));
   }
-  assert.match(nodeVerify, /function run\(label, command, args/);
-  assert.match(nodeVerify, /spawnSync\(command, args/);
-  assert.match(nodeVerify, /run\("STAGE 1\/4: Node", "npm", \["test"\]/);
-  assert.match(nodeVerify, /spawnSync\("dpm", \["version", "--active"\]/);
-  assert.match(nodeVerify, /run\("STAGE 3\/4: Daml build", "dpm", \["build"\]/);
-  assert.match(nodeVerify, /run\("STAGE 4\/4: Daml tests", "dpm", \["test"\]/);
+  assert.match(nodeVerify, /function trace\(message\)/);
+  assert.match(nodeVerify, /async function run\(label, command, args/);
+  assert.match(nodeVerify, /const child = spawn\(command, args/);
+  assert.match(nodeVerify, /child\.on\("close", \(code, signal\)/);
+  assert.match(nodeVerify, /verifier-trace\.log/);
+  assert.match(nodeVerify, /await run\("STAGE 1\/4: Node", "npm", \["test"\]/);
+  assert.match(nodeVerify, /await run\("STAGE 2\/4: DPM", "dpm", \["version", "--active"\]/);
+  assert.match(nodeVerify, /await run\("STAGE 3\/4: Daml build", "dpm", \["build"\]/);
+  assert.match(nodeVerify, /await run\("STAGE 4\/4: Daml tests", "dpm", \["test"\]/);
   assert.match(nodeVerify, /BUILD\/TEST VERIFICATION COMPLETE/);
 });
 
