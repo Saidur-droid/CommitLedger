@@ -23,7 +23,7 @@ if [ "$status" -eq 0 ]; then
   ls -lah evidence
 else
   echo "=== FAILURE DIAGNOSTICS ==="
-  for file in     evidence/canton-demo.log     evidence/canton-sandbox.log     evidence/daml-tests.log     evidence/daml-build.log     evidence/dpm-version.log     evidence/node-tests.log
+  for file in     evidence/verifier-trace.log     evidence/canton-demo.log     evidence/canton-sandbox.log     evidence/daml-tests.log     evidence/daml-build.log     evidence/dpm-version.log     evidence/node-tests.log
   do
     if [ -f "$file" ]; then
       echo
