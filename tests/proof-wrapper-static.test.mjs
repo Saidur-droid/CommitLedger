@@ -19,11 +19,14 @@ test('verification prints explicit stage markers', () => {
   }
 });
 
-test('verification advances stages with explicit status checks and no shell errexit', () => {
+test('verification explicitly disables errexit and checks every stage status', () => {
+  assert.match(verify, /^set \+e$/m);
   assert.doesNotMatch(verify, /^set\s+-[A-Za-z]*e[A-Za-z]*\s*(?:#.*)?$/m);
-  assert.match(verify, /run_logged/);
-  assert.match(verify, /local status=\$\?/);
+  assert.match(verify, /npm test > evidence\/node-tests\.log 2>&1/);
+  assert.match(verify, /status=\$\?/);
   assert.match(verify, /if \[ "\$status" -ne 0 \]; then/);
-  assert.match(verify, /FAILED with status/);
+  assert.match(verify, /STAGE 1\/4: Node: PASS/);
+  assert.match(verify, /STAGE 4\/4: Daml tests: PASS/);
   assert.match(verify, /BUILD\/TEST VERIFICATION COMPLETE/);
+  assert.match(verify, /exit 0/);
 });
