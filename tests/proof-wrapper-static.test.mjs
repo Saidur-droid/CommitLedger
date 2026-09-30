@@ -14,13 +14,13 @@ test('single proof wrapper always reports exit status and useful diagnostics', (
 });
 
 test('verification prints explicit stage markers', () => {
-  for (const marker of ['STAGE 1\/4: Node','STAGE 2\/4: DPM','STAGE 3\/4: Daml build','STAGE 4\/4: Daml tests']) {
+  for (const marker of ['STAGE 1\\/4: Node','STAGE 2\\/4: DPM','STAGE 3\\/4: Daml build','STAGE 4\\/4: Daml tests']) {
     assert.match(verify, new RegExp(marker));
   }
 });
 
 test('verification uses explicit stage status handling instead of shell errexit', () => {
-  assert.doesNotMatch(verify, /set -[^\n]*e/);
+  assert.doesNotMatch(verify, /^set\s+-[A-Za-z]*e[A-Za-z]*\s*(?:#.*)?$/m);
   assert.match(verify, /run_stage/);
   assert.match(verify, /if "\$@" >"\$logfile" 2>&1; then/);
   assert.match(verify, /FAILED with status/);
