@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expectLedgerFailure } from "./ledger-errors.mjs";
-import { CantonJsonApi } from "./canton-json-api.mjs";
+import { CantonJsonApi, extractTransactionCreatedEvents } from "./canton-json-api.mjs";
 import {
   templateId,
   buildCreateBountyCommand,
@@ -53,20 +53,31 @@ async function submitAndFind({
   lookupTemplateId,
   predicate
 }) {
-  const submission = await client.submitAndWait({
+  const response = await client.submitAndWaitForTransaction({
     commands: [command],
     actAs: [actAs],
+    readAs: [lookupParty],
     workflowId,
     commandId: `${workflowId}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     packageIdSelectionPreference: client.packageIdSelectionPreference || []
   });
-  const event = await client.findActiveContract({
-    party: lookupParty,
-    templateId: lookupTemplateId,
-    activeAtOffset: offsetOf(submission),
-    predicate
+  const transaction = response?.transaction;
+  const offset = Number(transaction?.offset);
+  if (!transaction?.updateId || !Number.isSafeInteger(offset) || offset <= 0) {
+    throw new Error("Canton transaction response did not return updateId and offset");
+  }
+  const requestedEntity = String(lookupTemplateId).split(":").slice(-2).join(":");
+  const matches = extractTransactionCreatedEvents(response).filter(candidate => {
+    const candidateEntity = String(candidate?.templateId || "").split(":").slice(-2).join(":");
+    return candidateEntity === requestedEntity && predicate(candidate?.createArgument || {});
   });
-  return { submission, event };
+  if (matches.length !== 1) {
+    throw new Error(`Expected exactly one created ${requestedEntity} contract, found ${matches.length}`);
+  }
+  return {
+    submission: { updateId: transaction.updateId, completionOffset: offset },
+    event: matches[0]
+  };
 }
 
 export function runtimeConfigFromEnv(env = process.env) {
