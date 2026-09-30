@@ -19,9 +19,11 @@ test('verification prints explicit stage markers', () => {
   }
 });
 
-test('verification uses explicit stage status handling instead of shell errexit', () => {
+test('verification advances stages with explicit status checks and no shell errexit', () => {
   assert.doesNotMatch(verify, /^set\s+-[A-Za-z]*e[A-Za-z]*\s*(?:#.*)?$/m);
-  assert.match(verify, /run_stage/);
-  assert.match(verify, /if "\$@" >"\$logfile" 2>&1; then/);
+  assert.match(verify, /run_logged/);
+  assert.match(verify, /local status=\$\?/);
+  assert.match(verify, /if \[ "\$status" -ne 0 \]; then/);
   assert.match(verify, /FAILED with status/);
+  assert.match(verify, /BUILD\/TEST VERIFICATION COMPLETE/);
 });
