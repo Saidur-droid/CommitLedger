@@ -75,7 +75,8 @@ export function extractCreatedEvents(activeContractsResponse) {
 }
 
 export function extractTransactionCreatedEvents(response) {
-  const events = response?.transaction?.value?.events;
+  const transaction = response?.transaction?.value || response?.transaction;
+  const events = transaction?.events;
   if (!Array.isArray(events)) return [];
   return events
     .map(event => event?.CreatedEvent?.value || event?.CreatedEvent)
