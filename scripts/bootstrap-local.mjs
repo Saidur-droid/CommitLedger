@@ -8,7 +8,7 @@ import {CantonApiError} from '../src/ledger-errors.mjs';
 const baseUrl=process.env.CANTON_JSON_API_URL || 'http://127.0.0.1:3975';
 const api=new CantonJsonApi({baseUrl,insecureLocal:true});
 const suffix=randomUUID().slice(0,8);
-const env={CANTON_JSON_API_URL:baseUrl,CANTON_INSECURE_LOCAL:'true',CANTON_PACKAGE_ID:process.env.CANTON_PACKAGE_ID};
+const env={CANTON_JSON_API_URL:baseUrl,CANTON_INSECURE_LOCAL:'true',CANTON_PACKAGE_ID:process.env.CANTON_PACKAGE_ID,CANTON_PACKAGE_NAME:process.env.CANTON_PACKAGE_NAME || 'commit-ledger'};
 if(!/^[a-f0-9]{64}$/.test(env.CANTON_PACKAGE_ID||'')) throw new Error('Actual DAR package ID is required');
 
 async function allocateParty(role) {
@@ -47,5 +47,5 @@ env.CANTON_USER_ID=userId;
 
 const quote=value=>"'"+String(value).replaceAll("'","'\\''")+"'";
 await writeFile('.env.canton-demo.local',Object.entries(env).map(([k,v])=>`${k}=${quote(v)}`).join('\n')+'\n',{mode:0o600});
-await writeFile('evidence/ledger-setup.json',JSON.stringify({environment:'local-sandbox-no-auth',packageId:env.CANTON_PACKAGE_ID,parties,userId},null,2)+'\n');
+await writeFile('evidence/ledger-setup.json',JSON.stringify({environment:'local-sandbox-no-auth',packageId:env.CANTON_PACKAGE_ID,packageName:env.CANTON_PACKAGE_NAME,parties,userId},null,2)+'\n');
 console.log('Allocated three real demo parties and one local demo user; wrote .env.canton-demo.local.');
