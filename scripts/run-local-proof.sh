@@ -37,8 +37,7 @@ node scripts/verify-all.mjs
 DAR="$PWD/daml/.daml/dist/commit-ledger-0.1.0.dar"
 test -f "$DAR"
 
-export CANTON_PACKAGE_ID
-CANTON_PACKAGE_ID=$(python3 scripts/dar-package-id.py "$DAR")
+python3 scripts/dar-package-id.py "$DAR" >/dev/null
 export CANTON_PACKAGE_NAME
 CANTON_PACKAGE_NAME=$(sed -n 's/^name:[[:space:]]*//p' daml/daml.yaml | head -n 1 | tr -d '\r')
 if [ -z "$CANTON_PACKAGE_NAME" ]; then
