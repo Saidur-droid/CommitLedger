@@ -118,10 +118,10 @@ test('ambiguous active contracts cannot silently choose an old demo receipt', as
 });
 
 
-test('active-contract lookup encodes activeAtOffset as a JSON string', async t => {
+test('active-contract lookup encodes activeAtOffset as a JSON int64', async t => {
   let body;
   t.mock.method(globalThis,'fetch',async (_url,options)=>{ body=JSON.parse(options.body); return Response.json([]); });
   const api=new CantonJsonApi({baseUrl:'http://localhost:3975',token:'unit-token'});
   await api.activeContracts({party:'unit-party',templateId:'pkg:CommitLedger:Bounty',activeAtOffset:42});
-  assert.equal(body.activeAtOffset,'42');
+  assert.equal(body.activeAtOffset,42);
 });
