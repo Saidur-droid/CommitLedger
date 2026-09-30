@@ -32,7 +32,7 @@ if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
   export GITHUB_TOKEN
 fi
 
-bash scripts/verify-all.sh
+node scripts/verify-all.mjs
 
 DAR="$PWD/daml/.daml/dist/commit-ledger-0.1.0.dar"
 test -f "$DAR"
