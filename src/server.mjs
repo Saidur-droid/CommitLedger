@@ -23,9 +23,13 @@ async function readJson(req) {
 export function createAppServer(env=process.env) {
   return http.createServer(async(req,res)=>{
     try {
-      const origin=`http://${req.headers.host||'localhost'}`;
+      const forwardedProto=String(req.headers['x-forwarded-proto']||'').split(',')[0].trim().toLowerCase();
+      const protocol=['http','https'].includes(forwardedProto)?forwardedProto:'http';
+      const origin=`${protocol}://${req.headers.host||'localhost'}`;
       const url=new URL(req.url,origin);
-      if(!['127.0.0.1','localhost','[::1]'].includes(url.hostname)) return json(res,403,{error:'Loopback host required'});
+      const allowedHosts=new Set(['127.0.0.1','localhost','[::1]']);
+      if(env.COMMITLEDGER_PUBLIC_HOST) allowedHosts.add(String(env.COMMITLEDGER_PUBLIC_HOST).trim().toLowerCase());
+      if(!allowedHosts.has(url.hostname.toLowerCase())) return json(res,403,{error:'Untrusted host'});
       if(req.method==='POST') {
         if(req.headers.origin && req.headers.origin!==origin) return json(res,403,{error:'Cross-origin write rejected'});
         if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||'')) return json(res,415,{error:'application/json is required'});
@@ -85,5 +89,6 @@ export function createAppServer(env=process.env) {
 }
 if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   const port=Number(process.env.PORT||4173);
-  createAppServer().listen(port,'127.0.0.1',()=>console.log(`CommitLedger running at http://127.0.0.1:${port}`));
+  const host=process.env.COMMITLEDGER_BIND_HOST||'127.0.0.1';
+  createAppServer().listen(port,host,()=>console.log(`CommitLedger running at http://${host}:${port}`));
 }
