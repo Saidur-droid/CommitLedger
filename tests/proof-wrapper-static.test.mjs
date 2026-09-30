@@ -30,7 +30,9 @@ test('Node verifier owns all four deterministic verification stages', () => {
   assert.match(nodeVerify, /const child = spawn\(command, args/);
   assert.match(nodeVerify, /child\.on\("close", \(code, signal\)/);
   assert.match(nodeVerify, /verifier-trace\.log/);
-  assert.match(nodeVerify, /await run\("STAGE 1\/4: Node", "npm", \["test"\]/);
+  assert.match(nodeVerify, /readdirSync\(resolve\(root, "tests"\)\)/);
+  assert.match(nodeVerify, /NODE_TEST_FILES/);
+  assert.match(nodeVerify, /await run\("STAGE 1\/4: Node", process\.execPath, \["--test", \.\.\.testFiles\]/);
   assert.match(nodeVerify, /await run\("STAGE 2\/4: DPM", "dpm", \["version", "--active"\]/);
   assert.match(nodeVerify, /await run\("STAGE 3\/4: Daml build", "dpm", \["build"\]/);
   assert.match(nodeVerify, /await run\("STAGE 4\/4: Daml tests", "dpm", \["test"\]/);
