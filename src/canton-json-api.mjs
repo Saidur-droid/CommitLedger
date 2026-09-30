@@ -6,6 +6,38 @@ function requireText(value, name) {
   return text;
 }
 
+function encodeDamlValue(value) {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new Error("Daml numeric values must be finite");
+    return String(value);
+  }
+  if (Array.isArray(value)) return value.map(encodeDamlValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, nested]) => [key, encodeDamlValue(nested)]));
+  }
+  return value;
+}
+
+function encodeCommandDamlValues(command) {
+  if (command?.CreateCommand) {
+    return {
+      CreateCommand: {
+        ...command.CreateCommand,
+        createArguments: encodeDamlValue(command.CreateCommand.createArguments)
+      }
+    };
+  }
+  if (command?.ExerciseCommand) {
+    return {
+      ExerciseCommand: {
+        ...command.ExerciseCommand,
+        choiceArgument: encodeDamlValue(command.ExerciseCommand.choiceArgument)
+      }
+    };
+  }
+  return command;
+}
+
 function authHeaders(token) {
   return {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -73,7 +105,7 @@ export class CantonJsonApi {
     return this.request("/v2/commands/submit-and-wait", {
       method: "POST",
       body: JSON.stringify({
-        commands,
+        commands: commands.map(encodeCommandDamlValues),
         workflowId,
         userId: this.userId,
         commandId,
