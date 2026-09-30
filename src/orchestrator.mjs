@@ -106,7 +106,8 @@ export async function runFullLifecycle({
   githubToken = "",
   now = () => new Date()
 }) {
-  const { baseUrl, packageId, packageName, parties, tokens } = runtime;
+  const { baseUrl, packageId, parties, tokens } = runtime;
+  const packageName = runtime.packageName || "commit-ledger";
   const runId = randomUUID();
   contributorGithub = required(contributorGithub, "contributorGithub");
   const issue = await fetchGitHubIssue({ issueUrl, token: githubToken });
@@ -137,7 +138,7 @@ export async function runFullLifecycle({
   const proof = {
     schemaVersion: 2,
     runId,
-    packageName,
+    packageId,
     packageName,
     generatedAt: now().toISOString(),
     environment: runtime.insecureLocal ? "local-sandbox-no-auth" : "authenticated-ledger",
