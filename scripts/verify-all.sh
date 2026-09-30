@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -u
 cd "$(dirname "$0")/.."
 mkdir -p evidence
 rm -f evidence/verification.json
