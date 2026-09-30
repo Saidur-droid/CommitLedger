@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdirSync, rmSync, writeFileSync, appendFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync, appendFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -73,7 +73,12 @@ async function main() {
 
   trace(`SOURCE ${source}`);
 
-  await run("STAGE 1/4: Node", "npm", ["test"], { logFile: "evidence/node-tests.log" });
+  const testFiles = readdirSync(resolve(root, "tests"))
+    .filter(name => name.endsWith(".test.mjs"))
+    .sort()
+    .map(name => resolve(root, "tests", name));
+  trace(`NODE_TEST_FILES ${testFiles.length}`);
+  await run("STAGE 1/4: Node", process.execPath, ["--test", ...testFiles], { logFile: "evidence/node-tests.log" });
 
   await run("STAGE 2/4: DPM", "dpm", ["version", "--active"], {
     cwd: resolve(root, "daml"),
