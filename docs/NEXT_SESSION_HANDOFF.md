@@ -2,87 +2,85 @@
 
 **Read this first. Do not ask the owner to repeat the project history.**
 
-## Where we stopped
+## Active competition plan
 
-Technical runtime work is green on the exact commit:
+CommitLedger now has exactly two active submission targets:
 
-`722df9f69458cba0080d687105b4a0fb00f5c4d6`
+1. **Crypto World's Fair — Colosseum**
+2. **Ideathon Bangladesh 2026**
+
+Canonical plan: [COMPETITION_TARGETS.md](COMPETITION_TARGETS.md)
+
+HackCanton Season 3 is no longer an active submission target. Do not resume AppsFactory/Mana/journal work.
+
+## Technical product status
+
+Product engineering is complete unless a new concrete defect or a verified new-competition requirement appears.
+
+Frozen fully proven technical commit:
+
+`26bd992787401f6458f6685d2ab76aacd05eab4e`
 
 Canonical Render service:
 
 `commitledger-proof-final`
 
-Public URL:
+Live proof page:
 
 https://commitledger-proof-final.onrender.com
 
-Successful Render deploy:
+Proof endpoint:
 
-`dep-daucnqff3r2c73ep69u0`
+https://commitledger-proof-final.onrender.com/api/proof
 
-Deploy status: **live**.
+Successful proven deploy:
 
-The similarly named `commitledger-proof` service is an older dummy/duplicate service. Ignore its failed status. It is not the canonical proof service.
+`dep-daujs4m0tbcc73dn0c80`
 
-## What was actually proven
+Verified proof:
+- Node 86/86 PASS;
+- DPM 3.5.12 PASS;
+- Daml build PASS;
+- Daml Script tests PASS;
+- fresh Canton sandbox;
+- MergeEarn #69 -> PR #73 as the external GitHub evidence fixture;
+- six real Canton transitions;
+- SettlementReceipt;
+- three structured negative/rejection proofs;
+- exact source-commit binding.
 
-- Node tests: 86/86 pass.
-- DPM 3.5.12 works.
-- Daml build passes.
-- Daml Script tests pass.
-- Temurin Java 21 is available in the proof environment.
-- Fresh Canton sandbox starts and becomes ready.
-- Built DAR package identity is derived from the DAR itself.
-- Three distinct demo parties are allocated.
-- Public real GitHub fixture passes preflight: MergeEarn issue #69 (open) + PR #73 (merged, references #69).
-- Six-step Canton lifecycle completes through SettlementReceipt.
-- Wrong-evidence rejection is captured.
-- Unauthorized settlement rejection is captured.
-- Duplicate/replay rejection is captured.
-- Evidence is source-commit bound.
-- Render build succeeds.
-- Judge-facing web service deploys live on Render.
+**Important:** MergeEarn is only the external GitHub evidence fixture. CommitLedger is the product.
 
-## Root causes already solved — do not re-debug these without new evidence
+## Branch/proof rule
 
-- GitHub hosted Actions jobs failing before steps started.
-- Offline desktop execution dependency.
-- missing Java in Render build image.
-- brittle DAR package-ID extraction.
-- duplicate package-ID env/file propagation.
-- invalid closed GitHub issue fixture.
-- Canton 3.5 error-envelope normalization.
-- server binding to 127.0.0.1 instead of 0.0.0.0 on Render.
-- forwarded HTTPS/public-host handling.
-- brittle public-host regression test.
+Planning/documentation commits may be newer than the frozen technical proof.
 
-## What remains
+Do not call a newer documentation commit “runtime proven.”
 
-This is now a **submission preparation** project, not a runtime debugging project.
+If executable code changes, rerun the full Render proof on the exact new code commit before using it as technical evidence.
 
-Remaining mandatory work:
-- desktop browser QA;
-- mobile/narrow viewport QA;
-- final secrets/publication review;
-- final <=5-minute video;
-- public repo access for judges at the final chosen time;
-- public video/pitch/project/evidence links;
-- logged-out/private-window verification of all links;
-- AppsFactory Mana/activity/profile/journal/team/eligibility gates;
-- final pre-existing-work/hackathon-period disclosure review;
-- portal submission;
-- retain final submission receipt.
+## Global competition rule
+
+Before engineering for either target, verify:
+- registration open;
+- participant/team eligibility;
+- no paid-service requirement;
+- pre-existing-code policy;
+- judging/build window;
+- required stack/track;
+- submission deadline and deliverables.
+
+Registration/eligibility comes before feature work.
 
 ## Exact next action
 
-Next time, begin with **browser QA of https://commitledger-proof-final.onrender.com**.
+Next session begins with **Colosseum registration/rules verification**, not coding.
 
-If browser QA passes, move directly to the final video and submission package.
+Then:
+1. register/apply to Colosseum and retain confirmation;
+2. verify/register for Ideathon Bangladesh 2026 and retain confirmation;
+3. write the final requirements matrix;
+4. prepare competition-specific pitch/demo/submission materials;
+5. only then consider any necessary changes.
 
-Do not change production/proof code unless QA finds a concrete defect. Any code change after the proven commit invalidates the exact-commit proof and requires a fresh proof run.
-
-See:
-- `docs/DELIVERY_STATUS.md`
-- `docs/FINAL_CHECKLIST.md`
-- `docs/SUBMISSION_DRAFT.md`
-- `docs/DEMO_SCRIPT.md`
+Owner constraint: **free tools/services only** unless explicitly changed.
