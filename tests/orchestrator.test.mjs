@@ -27,3 +27,16 @@ test("runtime config supports one local token or role-specific tokens", () => {
   assert.equal(config.tokens.contributor, "local-admin-token");
   assert.equal(config.tokens.verifier, "local-admin-token");
 });
+
+test("runtime config carries explicit proof environment label", () => {
+  const config = runtimeConfigFromEnv({
+    CANTON_JSON_API_URL: "https://devnet.example",
+    CANTON_PACKAGE_ID: "pkg",
+    CANTON_TOKEN: "token",
+    CANTON_MAINTAINER_PARTY: "Maintainer::1",
+    CANTON_CONTRIBUTOR_PARTY: "Contributor::1",
+    CANTON_VERIFIER_PARTY: "Verifier::1",
+    CANTON_ENVIRONMENT_LABEL: "authenticated-devnet"
+  });
+  assert.equal(config.environmentLabel, "authenticated-devnet");
+});
