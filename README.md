@@ -4,11 +4,17 @@
 
 CommitLedger binds a real GitHub bounty issue and merged pull request to role-separated Daml authorization and an auditable Canton settlement receipt.
 
-## Competition thesis
+## Crypto World's Fair 2026
+
+CommitLedger is being submitted to **Colosseum Crypto World's Fair 2026** as a general-pool entry. Colosseum accepts products across blockchain ecosystems; CommitLedger uses Canton because multi-party authorization and auditable settlement are core to the product, not a cosmetic integration.
+
+**Competition deadline:** October 12, 2026 at 11:59 PM PT.
+
+## Product thesis
 
 `GitHub Issue -> Bounty -> Claim -> Pull Request -> Merge Evidence -> Canton Settlement -> SettlementReceipt`
 
-Canton is the trust and settlement layer, not a cosmetic integration. Removing Canton removes the product's authorization, provenance, replay protection and final settlement record.
+GitHub proves the work event. Daml defines who may move the bounty state. Canton records the authorized settlement state and proof.
 
 ## Core guarantees
 
@@ -41,7 +47,7 @@ npm start
 
 Open `http://127.0.0.1:4173`.
 
-Because this repository is currently private, set `GITHUB_TOKEN` with read access before using the canonical GitHub verifier.
+If this repository is private, set `GITHUB_TOKEN` with read access before using the canonical GitHub verifier.
 
 ## Run the full Canton proof
 
@@ -57,7 +63,7 @@ Then:
 npm run demo:full
 ```
 
-The runner automatically captures each Canton `updateId`, `completionOffset` and active `contractId`, executes negative authorization/replay checks, and finishes at the active `SettlementReceipt`.
+The runner captures Canton `updateId`, `completionOffset` and active `contractId`, executes negative authorization/replay checks, and finishes at the active `SettlementReceipt`.
 
 See [Judge Runbook](docs/JUDGE_RUNBOOK.md) for the exact operator path.
 
@@ -65,19 +71,19 @@ See [Judge Runbook](docs/JUDGE_RUNBOOK.md) for the exact operator path.
 
 The Daml project is under `daml/` and is pinned to the stable open-source DPM SDK bundle **3.5.12**.
 
-Verification commands:
-
 ```bash
 bash scripts/bootstrap-dpm.sh
 bash scripts/verify-all.sh
 ```
 
-## Competition governance
+## Colosseum submission package
 
-- [Locked decisions](LOCKED_DECISIONS.md)
 - [Competition compliance](docs/COMPETITION_COMPLIANCE.md)
-- [Winning standard](docs/WINNING_STANDARD.md)
-- [Rules snapshot](docs/RULES_SNAPSHOT.md)
+- [Verified rules snapshot](docs/RULES_SNAPSHOT.md)
+- [Submission copy](docs/COLOSSEUM_SUBMISSION.md)
+- [Pitch script](docs/PITCH_SCRIPT.md)
+- [Technical demo script](docs/DEMO_SCRIPT.md)
+- [Final submission checklist](docs/SUBMISSION_CHECKLIST.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Threat model](docs/THREAT_MODEL.md)
 - [Judge runbook](docs/JUDGE_RUNBOOK.md)
@@ -88,4 +94,4 @@ bash scripts/verify-all.sh
 
 CommitLedger does not claim Canton Coin transfer, fiat settlement, external adoption, mainnet usage, green CI, or runtime Canton success unless that evidence has actually been produced.
 
-Canton is a registered trademark of Digital Asset (Switzerland) GmbH. CommitLedger is an independent project and is not sponsored or endorsed by Digital Asset.
+Canton is a registered trademark of Digital Asset (Switzerland) GmbH. CommitLedger is an independent project and is not sponsored or endorsed by Digital Asset or Colosseum.
