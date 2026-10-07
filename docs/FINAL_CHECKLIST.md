@@ -1,89 +1,99 @@
-# CommitLedger — Dual-Program Final Checklist
+# CommitLedger — HackCanton + Colosseum Final Checklist
 
-Canonical active targets:
-1. **Crypto World's Fair — Colosseum**
-2. **Ideathon Bangladesh 2026**
+_Last updated: 7 October 2026._
 
-Do not use the old HackCanton/AppsFactory checklist as the active plan.
-
-## Frozen technical baseline
+## Shared frozen technical baseline
 
 - [x] Product core implemented.
-- [x] Node tests: 86/86 PASS on proven build.
+- [x] Canonical GitHub evidence verification implemented.
+- [x] Role-separated Maintainer / Contributor / Verifier workflow implemented.
+- [x] Node tests: 86/86 PASS on frozen proof commit.
 - [x] DPM 3.5.12 PASS.
 - [x] Daml build PASS.
 - [x] Daml Script tests PASS.
 - [x] Fresh Canton sandbox proof completed.
 - [x] Six-step ledger lifecycle completed.
 - [x] SettlementReceipt generated.
-- [x] Wrong-issue rejection captured.
+- [x] Wrong-evidence rejection captured.
 - [x] Unauthorized-settlement rejection captured.
 - [x] Duplicate/replay rejection captured.
-- [x] Public read-only proof endpoint exists.
-- [x] Frozen technical proof commit: `26bd992787401f6458f6685d2ab76aacd05eab4e`.
-- [x] Canonical Render service: `commitledger-proof-final`.
+- [x] Public read-only proof service recorded.
+- [x] Frozen proof commit: `26bd992787401f6458f6685d2ab76aacd05eab4e`.
+- [x] AI assistance disclosure exists.
+- [x] Hackathon work disclosure exists.
+- [x] HackCanton pitch copy exists.
+- [x] HackCanton demo script exists.
+- [x] Colosseum pitch script exists.
+- [x] Colosseum demo script exists.
 
-Documentation/planning commits after the proven commit are not automatically runtime-proven.
+If executable code changes, rerun the complete proof on the exact new code commit.
 
-## Universal eligibility gate — must pass before coding
+## HackCanton Season 3
 
-For each target:
-- [ ] Registration is still open.
-- [ ] Participant/team eligibility confirmed.
-- [ ] Free participation path confirmed.
-- [ ] Pre-existing-code/project rule confirmed.
-- [ ] Competition build/judging window confirmed.
-- [ ] Required chain/stack/track confirmed.
-- [ ] Required deliverables confirmed.
-- [ ] Deadline confirmed from live official source.
-- [ ] Registration/application confirmation saved.
+Deadline: **9 Oct 2026, 23:59 UTC = 10 Oct 2026, 05:59 Bangladesh time**.
 
-If any item above is unknown, do not start competition-specific engineering.
+### Rules / eligibility
+- [x] Public deadline rechecked on 7 Oct.
+- [x] Solo/team format publicly supported.
+- [x] Canton-native fit documented.
+- [ ] Logged-in AppsFactory registration state confirmed.
+- [ ] Team/project profile completeness confirmed.
+- [ ] Exact portal track selected and confirmed.
+- [ ] Any private portal activity/Mana/journal requirements checked.
+- [ ] Eligibility status confirmed from the participant portal.
 
-## Colosseum checklist
+### Submission package
+- [x] Product description drafted.
+- [x] Canton integration explanation drafted.
+- [x] Architecture/security evidence ready.
+- [x] Demo storyboard ready.
+- [x] <=5-minute target demo script ready.
+- [ ] Final HackCanton video recorded.
+- [ ] Video reviewed for secrets, legibility and audio.
+- [ ] Repository accessible to judges.
+- [ ] Live proof link tested in logged-out/private browser.
+- [ ] Proof JSON link tested in logged-out/private browser.
+- [ ] Final portal fields completed.
+- [ ] Final Submit action completed.
+- [ ] Submission receipt / confirmation retained.
 
-- [ ] Live rules re-verified.
-- [ ] Registration completed.
-- [ ] Confirmation/receipt retained.
-- [ ] Pre-existing-work disclosure prepared.
-- [ ] Competition-window work identified from Git history.
-- [ ] Founder/market positioning finalized.
-- [ ] Target-user validation collected.
-- [ ] Market/GTM story finalized.
-- [ ] Presentation video recorded and reviewed.
-- [ ] Product demo recorded and reviewed.
-- [ ] Repository/access requirement satisfied.
-- [ ] Every submission link tested logged-out where applicable.
+**Stop condition:** if the logged-in portal shows a mandatory gate that cannot be truthfully satisfied, do not fake it. Preserve the technical package and submit only if the official portal allows an eligible entry.
+
+## Crypto World's Fair — Colosseum
+
+Official cutoff: **12 Oct 2026, 11:59 PM PT = 13 Oct 2026, 12:59 Bangladesh time**.
+
+### Eligibility / registration
+- [x] Official rules PDF rechecked on 7 Oct.
+- [x] No-purchase requirement confirmed.
+- [x] Age rule captured.
+- [x] Bangladesh not listed among current excluded jurisdictions.
+- [x] English-content requirement captured.
+- [x] Pre-existing-code disclosure rule captured from current FAQ.
+- [ ] Colosseum account/login confirmed.
+- [ ] Crypto World's Fair joined.
+- [ ] Team status confirmed.
+- [ ] Project record created in portal.
+
+### Submission package
+- [x] Product positioning drafted.
+- [x] Technical proof ready.
+- [x] Honest pre-existing-work disclosure draft ready.
+- [x] Founder/market story draft ready.
+- [x] Business model/GTM draft ready.
+- [x] Presentation script ready.
+- [x] Product demo script ready.
+- [ ] Real demand/user validation added if available.
+- [ ] 2–3 minute presentation video recorded.
+- [ ] <=3 minute demo video recorded.
+- [ ] Logo/graphic selected.
+- [ ] Repository accessible to judges or review access granted.
+- [ ] All content checked to be English.
+- [ ] Final links tested logged-out where applicable.
 - [ ] Final portal review completed.
-- [ ] Submission completed.
+- [ ] Final Submit action completed.
 - [ ] Submission receipt retained.
 
-## Ideathon Bangladesh 2026 checklist
+## Release rule
 
-- [ ] Live rules re-verified.
-- [ ] Registration/application completed.
-- [ ] Confirmation retained.
-- [ ] Problem and customer segment finalized.
-- [ ] Bangladesh relevance stated only with defensible evidence.
-- [ ] Business model hypothesis finalized.
-- [ ] Market sizing prepared.
-- [ ] Validation evidence collected.
-- [ ] Pitch/application materials completed.
-- [ ] Required links/files tested.
-- [ ] Final application review completed.
-- [ ] Submission completed.
-- [ ] Submission receipt retained.
-
-## Code-change rule
-
-Do not change product code merely to “refresh” the project for a new competition.
-
-Only change executable code when:
-- a verified competition requirement requires it; or
-- a real product/QA defect is found.
-
-If executable code changes, rerun the complete Render proof and bind evidence to the exact new code commit.
-
-## Owner constraint
-
-Use free tools/services only unless the owner explicitly approves otherwise.
+Do not claim either competition is submitted until the portal itself returns a confirmation/receipt.
