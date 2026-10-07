@@ -16,8 +16,8 @@ test('judge UI maps all six official judging criteria', () => {
   }
 });
 
-test('judge UI identifies Track 1 and describes proof as evidence-first', () => {
-  assert.match(html, /Track 1/);
+test('judge UI identifies the Season 4 RWA / Business Workflows track and remains evidence-first', () => {
+  assert.match(html, /RWA \/ Business Workflows/);
   assert.match(html, /no sample transaction IDs or simulated settlement success/i);
 });
 
