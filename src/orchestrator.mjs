@@ -90,6 +90,7 @@ export function runtimeConfigFromEnv(env = process.env) {
   return {
     insecureLocal,
     userId: env.CANTON_USER_ID || "",
+    environmentLabel: String(env.CANTON_ENVIRONMENT_LABEL || (insecureLocal ? "local-sandbox-no-auth" : "authenticated-ledger")),
     baseUrl,
     packageId: required(env.CANTON_PACKAGE_ID, "CANTON_PACKAGE_ID"),
     packageName: required(env.CANTON_PACKAGE_NAME || "commit-ledger", "CANTON_PACKAGE_NAME"),
@@ -151,9 +152,7 @@ export async function runFullLifecycle({
     packageId,
     packageName,
     generatedAt: now().toISOString(),
-    environment: runtime.insecureLocal
-      ? "local-sandbox-no-auth"
-      : String(process.env.CANTON_ENVIRONMENT_LABEL || "authenticated-ledger"),
+    environment: runtime.environmentLabel || (runtime.insecureLocal ? "local-sandbox-no-auth" : "authenticated-ledger"),
     issue,
     bounty,
     parties,
