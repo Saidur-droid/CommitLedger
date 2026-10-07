@@ -151,7 +151,9 @@ export async function runFullLifecycle({
     packageId,
     packageName,
     generatedAt: now().toISOString(),
-    environment: runtime.insecureLocal ? "local-sandbox-no-auth" : "authenticated-ledger",
+    environment: runtime.insecureLocal
+      ? "local-sandbox-no-auth"
+      : String(process.env.CANTON_ENVIRONMENT_LABEL || "authenticated-ledger"),
     issue,
     bounty,
     parties,
