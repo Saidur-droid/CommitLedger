@@ -2,58 +2,75 @@
 
 **Canton-native settlement infrastructure for verified open-source work.**
 
-CommitLedger binds real contribution evidence to role-separated authorization and an auditable settlement receipt.
+CommitLedger binds canonical contribution evidence to role-separated authorization and an auditable settlement receipt.
 
-## Current competition targets
+## Active competition targets — 7 October 2026
 
-CommitLedger is currently being prepared for exactly two programs:
+This sprint has exactly two active submission targets:
 
-1. **Crypto World's Fair — Colosseum**
-2. **Ideathon Bangladesh 2026**
+1. **HackCanton Season 3**
+   - Submission deadline: **9 Oct 2026, 23:59 UTC**
+   - Bangladesh time: **10 Oct 2026, 05:59**
+2. **Crypto World's Fair — Colosseum**
+   - Contest/submission cutoff: **12 Oct 2026, 23:59 PT**
+   - Bangladesh time: **13 Oct 2026, 12:59**
 
-See [Competition Targets](docs/COMPETITION_TARGETS.md) for the canonical plan, eligibility-first rules, and next-session order.
+The 1 October plan that retired HackCanton is superseded by the owner's 7 October instruction to submit CommitLedger to both programs.
 
-HackCanton Season 3 is no longer an active submission target. Its technical work is preserved as product proof/history.
+See [Competition Targets](docs/COMPETITION_TARGETS.md), [Submission Status](docs/SUBMISSION_STATUS_20261007.md), [Final Checklist](docs/FINAL_CHECKLIST.md), and [Submission Draft](docs/SUBMISSION_DRAFT.md).
 
 ## Product thesis
 
 `GitHub Issue -> Bounty -> Claim -> Pull Request -> Merge Evidence -> Canton Settlement -> SettlementReceipt`
 
-Canton is the current trust and settlement layer, not a cosmetic integration. Removing the ledger authorization layer removes the product's role controls, provenance, replay protection and final settlement record.
+Canton/Daml is the authorization and workflow-state layer, not a cosmetic integration. GitHub remains the canonical external work-evidence source.
 
 ## Core guarantees
 
 - **Maintainer** creates the bounty, accepts the claim and settles verified work.
-- **Contributor** creates the claim and submits the exact PR.
-- **Verifier** can attest only canonical merge evidence.
-- Merge evidence includes the exact bounty issue number.
-- Wrong issue, wrong SHA, unmerged work and unauthorized actions are rejected.
-- Settlement consumes the verified contract, blocking duplicate settlement.
+- **Contributor** claims work and submits the exact PR.
+- **Verifier** attests canonical merge evidence.
+- Merge evidence is bound to the exact issue and PR metadata.
+- Wrong evidence, unauthorized actions and replay/duplicate settlement are rejected.
+- Settlement consumes the verified contract and creates an auditable `SettlementReceipt`.
 - `DEMO_CREDIT` is explicitly non-production test value.
 
-## Verified proof fixture — not the product repository
+## Frozen technical proof
 
-The current reproducible external evidence fixture is:
+The last fully executed, source-bound technical proof is:
+
+`26bd992787401f6458f6685d2ab76aacd05eab4e`
+
+Verified at that exact code commit:
+
+- Node tests: **86/86 PASS**
+- DPM **3.5.12** PASS
+- Daml build PASS
+- Daml Script tests PASS
+- fresh Canton sandbox PASS
+- six ledger transitions PASS
+- `SettlementReceipt` generated
+- wrong-evidence rejection captured
+- unauthorized-settlement rejection captured
+- duplicate/replay rejection captured
+
+External GitHub evidence fixture:
 
 - Repository: `Saidur-droid/MergeEarn`
 - Open issue: `#69`
 - Merged PR: `#73`
-- Contributor: `Saidur-droid`
-- Base branch: `main`
 
-**CommitLedger is the product. MergeEarn is only the external GitHub issue/PR evidence source used to prove that CommitLedger can verify and settle work from another repository.**
+**MergeEarn is only the external proof fixture. CommitLedger is the product being submitted.**
 
-Frozen fully executed technical proof commit:
-
-`26bd992787401f6458f6685d2ab76aacd05eab4e`
-
-Live proof:
+Canonical proof service:
 
 https://commitledger-proof-final.onrender.com
 
 Proof JSON:
 
 https://commitledger-proof-final.onrender.com/api/proof
+
+Planning/documentation commits after the frozen proof do not become runtime-proven automatically. If executable code changes, rerun the complete proof on the exact new commit.
 
 ## Run locally
 
@@ -66,8 +83,6 @@ npm start
 
 Open `http://127.0.0.1:4173`.
 
-Because this repository may be private during preparation, set `GITHUB_TOKEN` with the required read access before using the canonical GitHub verifier locally.
-
 ## Run the full Canton proof
 
 Configure the documented Canton environment values, then run:
@@ -76,26 +91,26 @@ Configure the documented Canton environment values, then run:
 bash scripts/run-local-proof.sh
 ```
 
-The proof path reruns tests, builds/tests Daml, starts a fresh Canton sandbox, captures each ledger transition, executes negative authorization/replay checks, validates one coherent evidence bundle, and finishes at SettlementReceipt.
+The proof path reruns tests, builds/tests Daml, starts a fresh Canton sandbox, captures each ledger transition, executes negative authorization/replay checks, validates one coherent evidence bundle, and finishes at `SettlementReceipt`.
 
-## Canton / Daml
+## Submission assets
 
-The Daml project is under `daml/` and uses the pinned open-source DPM SDK bundle **3.5.12**.
-
-## Planning and governance
-
-- [Competition Targets](docs/COMPETITION_TARGETS.md)
-- [Next Session Handoff](docs/NEXT_SESSION_HANDOFF.md)
-- [Dual-Program Final Checklist](docs/FINAL_CHECKLIST.md)
-- [Dual-Program Submission Master Draft](docs/SUBMISSION_DRAFT.md)
-- [Delivery Status](docs/DELIVERY_STATUS.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Threat Model](docs/THREAT_MODEL.md)
-- [Evidence Manifest](docs/EVIDENCE_MANIFEST.md)
+- [Rules recheck — 7 Oct](docs/RULES_RECHECK_20261007.md)
+- [Submission status — 7 Oct](docs/SUBMISSION_STATUS_20261007.md)
+- [Competition targets](docs/COMPETITION_TARGETS.md)
+- [Final checklist](docs/FINAL_CHECKLIST.md)
+- [Submission master draft](docs/SUBMISSION_DRAFT.md)
+- [HackCanton pitch](docs/PITCH.md)
+- [HackCanton demo script](docs/DEMO_SCRIPT.md)
+- [Colosseum pitch script](docs/COLOSSEUM_PITCH_SCRIPT.md)
+- [Colosseum demo script](docs/COLOSSEUM_DEMO_SCRIPT.md)
+- [Hackathon work disclosure](docs/HACKATHON_WORK_DISCLOSURE.md)
+- [AI assistance disclosure](docs/AI_DISCLOSURE.md)
+- [Delivery status](docs/DELIVERY_STATUS.md)
 
 ## Integrity
 
-CommitLedger does not claim Canton Coin transfer, fiat settlement, external adoption, mainnet usage, revenue, paying customers, or production custody without evidence.
+CommitLedger does not claim Canton Coin transfer, fiat settlement, external adoption, MainNet usage, revenue, paying customers, or production custody without evidence.
 
 `DEMO_CREDIT` is test value only.
 
