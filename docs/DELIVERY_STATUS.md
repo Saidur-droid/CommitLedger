@@ -1,79 +1,50 @@
-# Delivery Status — 7 October 2026
+# Delivery Status — HackCanton Season 4
 
-Delivery branch: `fix/verified-delivery-20260929`.
+_Last updated: 7 October 2026._
 
-## Product / technical status
+## Product status
 
-**Technical delivery is GREEN.**
+**Core product: complete.**
 
-Frozen fully executed proof commit:
-
-`26bd992787401f6458f6685d2ab76aacd05eab4e`
-
-Canonical Render proof service:
-
-`commitledger-proof-final`
-
-Live page:
-https://commitledger-proof-final.onrender.com
-
-Proof endpoint:
-https://commitledger-proof-final.onrender.com/api/proof
-
-Successful proven deploy recorded in project history:
-`dep-daujs4m0tbcc73dn0c80`
-
-Verified on the frozen code state:
-- Node 86/86 PASS;
-- DPM 3.5.12 PASS;
-- Daml build PASS;
-- Daml Script tests PASS;
-- Java 21 runtime;
-- fresh Canton sandbox;
-- DAR/package identity extraction;
-- three distinct demo parties;
-- external GitHub fixture `Saidur-droid/MergeEarn#69 -> PR #73`;
-- six real Canton transitions;
+CommitLedger already has:
+- Canton/Daml role authorization;
+- canonical GitHub issue/PR verification;
+- six-step lifecycle;
 - SettlementReceipt;
 - wrong-evidence rejection;
 - unauthorized-settlement rejection;
-- duplicate/replay rejection;
-- source-commit binding.
+- duplicate/replay rejection.
 
-## Active competition direction
+## Season 4 judge polish
 
-The current sprint has exactly two active targets:
+**Implemented on `season4/jaw-drop-upgrade`:**
+- 60-second Judge Mode;
+- Evidence Passport;
+- visible duplicate-settlement rejection moment;
+- RWA / Business Workflows positioning;
+- DevNet-ready proof path;
+- validation sprint package.
 
-1. **HackCanton Season 3**
-2. **Crypto World's Fair — Colosseum**
+## Proof status
 
-The 1 October retirement of HackCanton is superseded by the owner's 7 October instruction.
+Frozen previously proven commit:
+`26bd992787401f6458f6685d2ab76aacd05eab4e`
 
-## Submission readiness
+Current Season 4 branch:
+**CI / exact-commit proof must be green before merge/deploy.**
 
-### HackCanton
-- technical product: DONE;
-- evidence/security proof: DONE;
-- written pitch/demo plan: DONE;
-- rules deadline recheck: DONE;
-- logged-in AppsFactory eligibility/profile state: **PENDING MANUAL CHECK**;
-- recorded final video: PENDING;
-- repo/publication gate: PENDING;
-- final portal submission/receipt: PENDING.
+## External status
 
-### Colosseum
-- technical product: DONE;
-- official rules recheck: DONE;
-- pre-existing-work approach: DONE;
-- submission copy: DRAFTED;
-- presentation/demo scripts: DONE;
-- portal registration/join state: **PENDING MANUAL CHECK**;
-- real demand validation: PENDING if available;
-- final videos: PENDING;
-- final portal submission/receipt: PENDING.
+Still user/organizer dependent:
+- Season 4 registration confirmation;
+- logged-in portal requirements;
+- authenticated DevNet credentials/environment;
+- 3–5 real validation conversations;
+- final demo video;
+- final submission.
 
-## Engineering state
+## Release rule
 
-Do not reopen product engineering unless a verified rule requires it or a real defect appears.
+Technical product may be called **100% technically ready** only after the current Season 4 exact commit passes the full Node + Daml + real local Canton proof pipeline.
 
-Documentation-only commits may advance the branch without changing the frozen technical proof claim. If executable code changes, rerun the full proof on the exact new commit.
+Competition submission may be called **100% ready** only after the external/manual gates above are also complete.

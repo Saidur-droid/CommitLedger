@@ -10,14 +10,14 @@ test('judge UI exposes competition readiness without claiming submission ready',
   assert.doesNotMatch(html, /SUBMISSION READY/);
 });
 
-test('judge UI maps all six official judging criteria', () => {
-  for (const label of ['Value \/ Problem','ICP \/ Audience','Metrics \/ Validation','GTM Materials','MVP Materials','Pitch Materials']) {
+test('judge UI maps the Season 4 business-first case', () => {
+  for (const label of ['Problem','ICP','Validation','Who pays','Why Canton','Pilot path']) {
     assert.match(html, new RegExp(label));
   }
 });
 
-test('judge UI identifies Track 1 and describes proof as evidence-first', () => {
-  assert.match(html, /Track 1/);
+test('judge UI identifies the Season 4 RWA / Business Workflows track and remains evidence-first', () => {
+  assert.match(html, /RWA \/ Business Workflows/);
   assert.match(html, /no sample transaction IDs or simulated settlement success/i);
 });
 
@@ -28,4 +28,11 @@ test('judge cockpit exposes current verified fixture and runtime proof state', (
   assert.match(html, /GitHub #69 → PR #73/);
   assert.match(html, /Runtime[\s\S]*VERIFIED/);
   assert.match(html, /PASS[\s\S]*Daml \+ real Canton proof/);
+});
+
+test('Season 4 judge mode exposes passport and replay rejection story', () => {
+  assert.match(html, /60-SECOND JUDGE MODE/);
+  assert.match(html, /Open Evidence Passport/);
+  assert.match(html, /Show the rejection moment/);
+  assert.match(html, /RWA \/ Business Workflows/);
 });

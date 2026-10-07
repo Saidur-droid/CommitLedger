@@ -1,7 +1,7 @@
 name: Verified Delivery
 on:
   push:
-    branches: [main, 'fix/**']
+    branches: [main, 'fix/**', 'season4/**']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -71,6 +71,10 @@ jobs:
           test -f docs/EVIDENCE_MANIFEST.md
           test -f docs/DEMO_SCRIPT.md
           test -f docs/SUBMISSION_DRAFT.md
+          test -f docs/SEASON4_RULES_SNAPSHOT.md
+          test -f docs/SEASON4_LOCKED_PLAN.md
+          test -f docs/DEVNET_PROOF_RUNBOOK.md
+          test -f docs/VALIDATION_SPRINT.md
           test -f daml/daml/CommitLedger.daml
           ! grep -RniE 'vercel|supabase' package.json src web scripts daml
           ! git ls-files | grep -E '(^|/)\.env(\.local)?$'

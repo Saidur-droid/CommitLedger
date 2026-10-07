@@ -58,3 +58,8 @@ test('configured public host accepts Render-style forwarded HTTPS origin',async 
   });
   assert.equal(result,503);
 });
+
+test('verified passport endpoint fails closed when build artifacts are absent',async t=>{
+  const base=await withServer(t);const response=await fetch(base+'/api/passport');
+  assert.equal(response.status,503);
+});
