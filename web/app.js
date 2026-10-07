@@ -18,6 +18,22 @@ function render(proof) {
     const a=document.createElement('a');a.href=url;a.download=`commitledger-proof-${lastProof.runId}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
 }
+function renderPassport(passport) {
+  const card=$('#passport-card');
+  card.classList.remove('hidden');
+  card.innerHTML=`<p class="kicker">EVIDENCE PASSPORT</p><h3>${escape(passport.workEvidence.repository)} #${escape(passport.workEvidence.issueNumber)} → PR #${escape(passport.workEvidence.pullRequestNumber)}</h3><div class="passport-grid"><div><span>Authority</span><strong>${escape(passport.authorization.model)}</strong></div><div><span>Receipt contract</span><code>${escape(passport.settlement.receiptContractId)}</code></div><div><span>Merge SHA</span><code>${escape(passport.workEvidence.mergeCommitSha)}</code></div><div><span>Evidence hash</span><code>${escape(passport.workEvidence.evidenceHash)}</code></div><div><span>Source commit</span><code>${escape(passport.sourceCommit)}</code></div><div><span>Environment</span><strong>${escape(passport.environment)}</strong></div></div><p class="muted">${escape(passport.integrity.statement)}</p>`;
+}
+function renderRejectionSpotlight(proof) {
+  const target=$('#rejection-spotlight');
+  const duplicate=proof?.negativeChecks?.find(check=>/duplicate/i.test(check.name)) || proof?.negativeChecks?.at(-1);
+  if(!duplicate) return;
+  target.classList.remove('hidden');
+  target.innerHTML=`<p class="kicker">THE REJECTION MOMENT</p><h3>Try to settle the same verified work twice.</h3><div class="rejection-code">REJECTED · ${escape(duplicate.code)}</div><p>${escape(duplicate.name)}</p><small>This is captured from the same source-bound proof run. A network error never counts as security proof.</small>`;
+}
+async function loadPassport() {
+  const {passport}=await request('/api/passport');
+  renderPassport(passport);
+}
 async function loadProof() {
   try {
     const {proof,verification}=await request('/api/proof');
@@ -67,3 +83,7 @@ $('#verify-form').addEventListener('submit',async event=>{
 });
 await health();
 await loadProof();
+$('#show-passport').addEventListener('click',async()=>{
+  try { await loadPassport(); } catch(error) { $('#passport-card').classList.remove('hidden'); $('#passport-card').textContent=error.message; }
+});
+$('#show-rejections').addEventListener('click',()=>{ if(lastProof) renderRejectionSpotlight(lastProof); });
