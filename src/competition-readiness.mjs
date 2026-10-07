@@ -5,17 +5,17 @@ const IMPLEMENTATION_GATES = [
   "cantonLifecycle",
   "negativeSecurity",
   "judgeUi",
-  "track1Package",
+  "colosseumPackage",
 ];
 
 const EXTERNAL_GATES = [
-  "publicRepository",
-  "publicArtifacts",
-  "mana1000",
-  "activity10Days",
-  "journalNonEmpty",
+  "repositoryAccess",
+  "presentationVideo",
+  "technicalDemoVideo",
   "projectProfileComplete",
-  "track1Selected",
+  "founderProfileComplete",
+  "preExistingWorkDisclosure",
+  "demandValidationDisclosure",
 ];
 
 function normalizeStatus(value, kind) {
