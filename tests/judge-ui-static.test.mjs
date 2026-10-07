@@ -10,8 +10,8 @@ test('judge UI exposes competition readiness without claiming submission ready',
   assert.doesNotMatch(html, /SUBMISSION READY/);
 });
 
-test('judge UI maps all six official judging criteria', () => {
-  for (const label of ['Value \/ Problem','ICP \/ Audience','Metrics \/ Validation','GTM Materials','MVP Materials','Pitch Materials']) {
+test('judge UI maps the Season 4 business-first case', () => {
+  for (const label of ['Problem','ICP','Validation','Who pays','Why Canton','Pilot path']) {
     assert.match(html, new RegExp(label));
   }
 });
