@@ -1,5 +1,7 @@
 module CommitLedger where
 
+import qualified DA.Text as Text
+
 -- CommitLedger intentionally models a demo/test settlement asset.
 -- It does not claim to transfer fiat, Canton Coin, or production funds.
 
@@ -19,6 +21,7 @@ data MergeEvidence = MergeEvidence
     prNumber : Int
     prUrl : Text
     headSha : Text
+    mergeCommitSha : Text
     baseBranch : Text
     merged : Bool
     mergedAt : Text
@@ -175,6 +178,7 @@ template SubmittedBounty
         assertMsg "evidence URL mismatch" (evidence.prUrl == pullRequest.prUrl)
         assertMsg "evidence head SHA mismatch" (evidence.headSha == pullRequest.headSha)
         assertMsg "evidence base branch mismatch" (evidence.baseBranch == pullRequest.baseBranch)
+        assertMsg "merge commit SHA must have 40 characters" (Text.length evidence.mergeCommitSha == 40)
         assertMsg "merge timestamp is required" (evidence.mergedAt /= "")
         assertMsg "evidence hash is required" (evidence.evidenceHash /= "")
         create VerifiedBounty with
@@ -229,6 +233,7 @@ template VerifiedBounty
           pullRequest
           rewardAmount
           rewardUnit
+          mergeCommitSha = evidence.mergeCommitSha
           evidenceHash = evidence.evidenceHash
           settledAt
           settlementRef
@@ -245,6 +250,7 @@ template SettlementReceipt
     pullRequest : GitHubPullRequestRef
     rewardAmount : Decimal
     rewardUnit : Text
+    mergeCommitSha : Text
     evidenceHash : Text
     settledAt : Time
     settlementRef : Text

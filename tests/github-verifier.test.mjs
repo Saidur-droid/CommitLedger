@@ -13,9 +13,10 @@ const payload = {
   html_url: "https://github.com/Saidur-droid/CommitLedger/pull/6",
   body: "Competition/demo evidence for #5.",
   merged: true,
+  merge_commit_sha: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   merged_at: "2026-09-27T10:57:30Z",
   user: { login: "Saidur-droid" },
-  head: { sha: "abc123" },
+  head: { sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
   base: { ref: "main", repo: { full_name: "Saidur-droid/CommitLedger" } }
 };
 
@@ -51,7 +52,7 @@ test("binds the exact bounty issue into canonical merge evidence", () => {
   assertExpectedPullRequest(pr, {
     repository: "saidur-droid/commitledger",
     prNumber: 6,
-    headSha: "abc123",
+    headSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     baseBranch: "main",
     contributorGithub: "Saidur-droid",
     issueNumber: 5
