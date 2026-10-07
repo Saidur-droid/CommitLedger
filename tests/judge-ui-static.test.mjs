@@ -29,3 +29,10 @@ test('judge cockpit exposes current verified fixture and runtime proof state', (
   assert.match(html, /Runtime[\s\S]*VERIFIED/);
   assert.match(html, /PASS[\s\S]*Daml \+ real Canton proof/);
 });
+
+test('Season 4 judge mode exposes passport and replay rejection story', () => {
+  assert.match(html, /60-SECOND JUDGE MODE/);
+  assert.match(html, /Open Evidence Passport/);
+  assert.match(html, /Show the rejection moment/);
+  assert.match(html, /RWA \/ Business Workflows/);
+});
