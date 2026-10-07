@@ -115,3 +115,27 @@ CommitLedger does not claim Canton Coin transfer, fiat settlement, external adop
 `DEMO_CREDIT` is test value only.
 
 Canton is a registered trademark of Digital Asset (Switzerland) GmbH. CommitLedger is an independent project and is not sponsored or endorsed by Digital Asset.
+
+
+## Colosseum finalization — 7 October 2026
+
+Immediate priority: **Crypto World's Fair — Colosseum**.
+
+Latest provider-verified technical proof on the canonical Render service is source-bound to:
+
+`d582f3a008a5d0eb658b1c4bb0a4dd5007de6705`
+
+Verified on Render on 7 October 2026:
+- Node tests: **88/88 PASS**;
+- DPM SDK 3.5.12 installed;
+- Daml build/tests PASS;
+- fresh Canton proof run completed;
+- final `SettlementReceipt` captured;
+- unauthorized-settlement rejection captured;
+- duplicate/replay settlement rejection captured;
+- build ended with `SUCCESS: VERIFIED EVIDENCE`;
+- canonical deployment is live.
+
+Colosseum final package: [docs/COLOSSEUM_FINAL_PACKAGE.md](docs/COLOSSEUM_FINAL_PACKAGE.md).
+
+The Colosseum wrapper is documentation/submission packaging only; it does not fork the proven settlement core.
