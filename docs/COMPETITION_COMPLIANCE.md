@@ -1,80 +1,94 @@
-# HackCanton Season 3 — Competition Compliance Gate
+# Colosseum Crypto World's Fair 2026 — Competition Compliance Gate
 
-_Last reviewed: 2026-09-27_
+_Last reviewed: 2026-10-07._
 
-This file separates **verified public requirements**, **working assumptions**, and **internal quality standards**. Never convert an assumption into a claimed official rule.
+This file separates **verified requirements**, **submission actions**, and **internal quality standards**. If the live Colosseum portal conflicts with this file, the portal and official rules win.
 
-## Non-negotiable goal #1
+## Official sources
 
-**Follow every competition rule that can be verified before submission.**
+- Competition page: https://colosseum.com/worldsfair
+- Hackathon FAQ: https://colosseum.com/hackathon?year=fall2026
+- Official rules PDF: https://colosseum.com/legal/Crypto%20World%27s%20Fair%20Hackathon%20Rules.pdf
 
-If a formal/private portal rule conflicts with any repository decision, the official rule wins immediately.
+## Verified eligibility and timing
 
-## Publicly verified competition direction
+- Contest period: September 14, 2026 at 6:00 AM PT through **October 12, 2026 at 11:59 PM PT**.
+- Each team member must register on Colosseum before the deadline.
+- A participant may be on only one team and a team may submit only one project.
+- Solo founders are allowed.
+- Products may use any blockchain ecosystem; dedicated tracks are separate prize pools.
+- Builders may use pre-existing code, but relevant development history must be disclosed.
+- All submitted content must be in English.
 
-Current official/public Canton ecosystem material for HackCanton Season 3 emphasizes:
-- build something real on Canton;
-- the build phase is active;
-- Canton/Daml/Ledger integration must be substantive enough to demonstrate an actual Canton application, not branding-only integration.
+## Verified submission materials
 
-Official/public sources to re-check before submission:
-- https://forum.canton.network/
-- https://appsfactory.cc/
+The Colosseum FAQ says the portal requests or expects:
 
-## Rules audit protocol
+- product name and brief description;
+- blockchains and tools integrated;
+- teammate backgrounds and previous experience;
+- team location;
+- product logo or graphic;
+- GitHub repository link;
+- 2–3 minute presentation video;
+- technical demo video of no more than 3 minutes;
+- go-to-market strategy;
+- demand validation and distribution plans;
+- any other context needed to understand the product and business.
 
-Every submission-critical requirement must be classified as one of:
+Open-source repositories are encouraged. A private repository is allowed only if review access is granted to `hackathon@colosseum.com`.
 
-- **VERIFIED** — confirmed from an official source or the actual submission portal.
-- **NOT REQUIRED** — official material explicitly does not require it, or the submission form does not ask for it.
-- **PENDING** — not yet confirmed. A PENDING item cannot be represented as an official rule.
+## Judging
 
-### Submission blocker
+The official rulebook evaluates:
+- functionality / code quality;
+- potential impact;
+- novelty;
+- UX;
+- open-source / composability;
+- business plan and team execution.
 
-Do not submit while any critical item below remains PENDING:
+The platform FAQ also emphasizes:
+- founder + market fit;
+- insight;
+- product + execution;
+- potential market size;
+- founder communication;
+- viability;
+- traction, when it exists.
 
-- eligibility / participant requirements
-- solo vs team eligibility
-- required registration state
-- submission deadline and timezone
-- required repository visibility/license
-- required build period / pre-existing-code restrictions
-- required Canton technology or network environment
-- required demo/video format and duration
-- required written fields
-- required live URL or deployment
-- intellectual-property / open-source requirements
-- judging criteria
-- prize-track eligibility
-- prohibited content / conduct
-- any mandatory sponsor technology
-- any mandatory identity/KYC step for prize eligibility
+CommitLedger must therefore be presented as a **startup**, not only as a technical demo.
 
-## Current working status
+## CommitLedger status
 
-| Requirement | Status | Repository action |
+| Requirement | Status | Action |
 |---|---|---|
-| Canton must be meaningful to the product | VERIFIED from public HackCanton positioning | Daml + Canton Ledger API are core architecture |
-| Paid infrastructure required | NOT FOUND as a requirement | Build remains free/local-first |
-| Canton Coin required | NOT FOUND as a requirement | Optional future adapter, not MVP dependency |
-| Real-money transaction required | NOT FOUND as a requirement | Demo/test asset only, clearly labelled |
-| Real-user traction required | NOT FOUND as a requirement | Genuine feedback is bonus evidence, never fabricated |
-| Formal final submission checklist | PENDING until portal/rulebook is accessible | Final submission is blocked until re-check |
+| Eligible blockchain ecosystem | VERIFIED | General-pool entry; do not claim a Canton-specific track |
+| English content | VERIFIED | Repository and submission docs are English |
+| Development during hackathon window | STRONG EVIDENCE | Current Git history shows major implementation work during the contest period; disclose any earlier work truthfully |
+| Product GitHub repository | READY | Repository exists and is judgeable |
+| Repository review access | ACTION REQUIRED | Make public or grant `hackathon@colosseum.com` access before submission |
+| Product description / stack | READY | See `docs/COLOSSEUM_SUBMISSION.md` |
+| Pitch script | READY TO RECORD | See `docs/PITCH_SCRIPT.md` |
+| Technical demo script | READY TO RECORD | See `docs/DEMO_SCRIPT.md` |
+| GTM / business plan | DRAFTED | See `docs/COLOSSEUM_SUBMISSION.md`; add only real validation evidence |
+| Logo / graphic | ACTION REQUIRED | Upload an original CommitLedger product graphic |
+| Founder background / location | ACTION REQUIRED | Fill with accurate founder information in portal |
+| Node tests | MUST RE-RUN | Capture current `npm test` output |
+| Daml build/tests | MUST VERIFY | Capture real DPM build/test output |
+| Canton lifecycle | MUST VERIFY | Run `npm run demo:full` against a real configured Canton environment |
+| Demo video | ACTION REQUIRED | Record from real runtime evidence; do not mock ledger success |
+| Presentation video | ACTION REQUIRED | Record from pitch script |
+| Final portal submission | ACTION REQUIRED | Submit before October 12, 2026 11:59 PM PT |
 
 ## Evidence integrity
 
-- Never fabricate users, testimonials, transactions, adoption, metrics, judging feedback, or production status.
-- Never claim MainNet usage unless it happened and can be independently shown.
-- Never claim a demo/test asset is real money.
-- Never claim an official requirement unless it is actually verified.
-- Preserve source links/screenshots/notes for every rule used in the final submission.
+- Never fabricate users, testimonials, transactions, adoption, revenue, or judging feedback.
+- Never describe `DEMO_CREDIT` as real money.
+- Never claim MainNet use unless independently verifiable.
+- Never claim runtime success from source code alone.
+- If there is no external traction yet, say so and present a concrete validation plan instead.
 
-## Final compliance pass
+## Final gate
 
-Immediately before submission:
-1. Re-open the official competition portal.
-2. Re-read current rules and judging criteria.
-3. Compare each requirement with the built repository.
-4. Update this file with VERIFIED / NOT REQUIRED status.
-5. Run the full technical evidence checklist.
-6. Submit only after all critical PENDING items are resolved.
+CommitLedger is **not fully submission-ready** until all ACTION REQUIRED and MUST VERIFY items above are completed with real evidence.
