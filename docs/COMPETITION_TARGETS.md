@@ -179,3 +179,15 @@ Do not force an ecosystem-track claim unless CommitLedger genuinely integrates t
 9. Submit Colosseum and save receipt.
 
 Owner constraint: use free tools/services unless explicitly changed.
+
+
+## 7 October priority override
+
+The current owner-approved execution sequence is now:
+1. finish **Colosseum Crypto World's Fair** packaging/submission first;
+2. preserve the exact Colosseum build/proof reference;
+3. continue HackCanton Season 4 from the same verified core.
+
+Do not fork core product logic between the two competitions.
+
+Latest canonical provider-verified proof: `d582f3a008a5d0eb658b1c4bb0a4dd5007de6705`, 88 Node tests + Daml/Canton proof green.

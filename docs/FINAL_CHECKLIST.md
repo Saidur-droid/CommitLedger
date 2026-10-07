@@ -97,3 +97,19 @@ Official cutoff: **12 Oct 2026, 11:59 PM PT = 13 Oct 2026, 12:59 Bangladesh time
 ## Release rule
 
 Do not claim either competition is submitted until the portal itself returns a confirmation/receipt.
+
+
+## Colosseum proof refresh — 7 October 2026
+
+Use the latest provider-verified proof instead of the older 86-test snapshot when presenting current evidence:
+
+- source commit: `d582f3a008a5d0eb658b1c4bb0a4dd5007de6705`;
+- Node tests: **88/88 PASS**;
+- Daml tests: PASS;
+- real Canton proof: PASS;
+- `SettlementReceipt`: captured;
+- duplicate settlement: rejected;
+- Render deploy: live;
+- proof service: https://commitledger-proof-final.onrender.com
+
+Remaining Colosseum blockers are external/account/media only: portal registration/project state, founder/team profile, logo/graphic, two videos, repository review access, truthful demand validation, final submit and confirmation receipt.
