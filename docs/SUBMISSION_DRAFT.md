@@ -1,14 +1,14 @@
-# CommitLedger — Dual-Program Submission Master Draft
+# CommitLedger — Submission Master Draft
 
-**Active targets**
-1. Crypto World's Fair — Colosseum
-2. Ideathon Bangladesh 2026
+_Updated 7 October 2026._
 
-See [COMPETITION_TARGETS.md](COMPETITION_TARGETS.md) for the canonical plan and eligibility-first rule.
+Active targets:
+1. HackCanton Season 3
+2. Crypto World's Fair — Colosseum
 
 ## Shared one-line description
 
-CommitLedger turns verified contribution work into an authorization-controlled settlement workflow with an auditable receipt.
+**CommitLedger turns verified contribution work into an authorization-controlled settlement workflow with an auditable receipt.**
 
 ## Shared problem
 
@@ -16,47 +16,43 @@ A code host can prove that an issue exists and a pull request merged, but that e
 
 ## Shared solution
 
-CommitLedger binds canonical contribution evidence to an authorization-controlled workflow:
+CommitLedger binds canonical contribution evidence to a role-authorized workflow:
 
-Issue -> Bounty -> Claim -> Pull Request -> Merge Verification -> Settlement -> SettlementReceipt.
+`Issue -> Bounty -> Claim -> Pull Request -> Merge Verification -> Settlement -> SettlementReceipt`
 
-The verifier checks repository identity, issue binding, contributor policy, base branch, merged state, head SHA, merge commit SHA, and evidence integrity before the workflow advances.
+The verifier checks repository identity, issue binding, contributor policy, base branch, merged state, head SHA, merge commit SHA and evidence integrity before settlement can advance.
 
 ## Technical differentiation
 
-Canton/Daml currently provides:
+Canton/Daml provides:
 - role-separated Maintainer, Contributor and Verifier authority;
 - explicit allowed contract transitions;
 - inspectable contract/update identifiers;
-- replay protection through contract consumption;
+- consumed-contract replay protection;
 - auditable SettlementReceipt generation.
 
 GitHub remains the external work-evidence source.
 
-## Verified technical evidence
+## Verified evidence
 
-Use the frozen proven technical commit:
+Frozen proven technical commit:
 
 `26bd992787401f6458f6685d2ab76aacd05eab4e`
 
 Live proof:
-
 https://commitledger-proof-final.onrender.com
 
 Proof JSON:
-
 https://commitledger-proof-final.onrender.com/api/proof
 
-External demo evidence fixture:
-- repository: `Saidur-droid/MergeEarn`;
+External evidence fixture:
+- repo: `Saidur-droid/MergeEarn`;
 - open issue: `#69`;
-- merged PR: `#73`;
-- contributor: `Saidur-droid`;
-- base branch: `main`.
+- merged PR: `#73`.
 
-**The MergeEarn repository is only a proof fixture. The submitted product is CommitLedger.**
+**MergeEarn is only the proof fixture. CommitLedger is the submitted product.**
 
-## Integrity
+## Integrity statement
 
 `DEMO_CREDIT` is test value only.
 
@@ -65,91 +61,149 @@ Do not claim:
 - Canton Coin transfer;
 - MainNet;
 - production custody;
-- real financial settlement;
-- paying customers;
-- revenue;
+- customers/revenue/traction that do not exist;
 - organizer endorsement.
 
-AI-assisted tools were used for research, planning, code review, testing, documentation, and implementation support. The participant remains responsible for all submitted claims and artifacts.
+AI-assisted tools were used for research, planning, code review, testing, documentation and implementation support. The participant remains responsible for all submitted claims and artifacts.
 
 ---
 
-# Colosseum version
+# HackCanton Season 3
 
-## Positioning
+## Suggested title
 
-CommitLedger is **verifiable work-to-settlement infrastructure for open-source ecosystems and contributor programs**.
+**CommitLedger — Verifiable GitHub Work to Canton Settlement**
 
-## Colosseum story
+## 15-second pitch
 
-Emphasize:
-- founder/market insight;
-- why contributor settlement is still operationally fragmented;
-- why evidence-linked authorization matters;
-- product execution and security proof;
-- target user;
-- market opportunity;
-- demand validation;
-- go-to-market;
-- startup viability.
+CommitLedger turns verified GitHub contribution evidence into a role-authorized Canton workflow and an auditable SettlementReceipt. GitHub proves the work event; Daml controls who may verify and settle it; Canton preserves replay-safe workflow state.
 
-Avoid presenting CommitLedger merely as a hackathon technical demo.
+## Problem statement
 
-## Work still needed
+Open-source and contributor bounty workflows often stop at “the PR merged.” That proves a repository event, but not who is authorized to approve settlement, whether the evidence is bound to the correct issue, or whether the same work can be settled twice.
 
-- official live-rule recheck;
-- registration confirmation;
-- competition-window/pre-existing-work disclosure;
-- user/demand validation;
-- final GTM;
-- presentation video;
-- product demo;
-- final portal fields;
-- submission receipt.
+## Solution
+
+CommitLedger adds an authorization-controlled settlement state machine:
+1. maintainer creates a bounty for a canonical issue;
+2. contributor claims it;
+3. contributor submits exact PR metadata;
+4. verifier checks canonical merged-PR evidence;
+5. maintainer settles only verified work;
+6. Canton creates the final SettlementReceipt.
+
+## Why Canton
+
+Without Canton/Daml, CommitLedger loses:
+- explicit party authorization;
+- contractual state transitions;
+- consumed-contract replay protection;
+- inspectable update/contract IDs;
+- the final auditable receipt.
+
+## Track candidate
+
+**Real-World Asset & Business Workflows** is the primary candidate because the product implements an end-to-end business workflow with role authorization and audit state. Confirm the exact portal option before selecting it.
+
+## Demo evidence
+
+Show:
+- canonical GitHub issue + merged PR;
+- Maintainer / Contributor / Verifier roles;
+- six ledger transitions;
+- SettlementReceipt;
+- wrong-issue rejection;
+- unauthorized settlement rejection;
+- duplicate/replay rejection;
+- exact source commit and proof bundle.
+
+## Repository / proof
+
+Repository: use the final judge-accessible CommitLedger repository URL.
+
+Live proof:
+https://commitledger-proof-final.onrender.com
+
+Proof JSON:
+https://commitledger-proof-final.onrender.com/api/proof
+
+## Work-period disclosure
+
+CommitLedger includes pre-existing repository history/scaffolding. The qualifying HackCanton delivery phase added and hardened the Canton/Daml workflow, GitHub evidence binding, runtime proof automation, negative security proof, judge UI and competition materials. Reconcile the final wording with Git history before submission.
 
 ---
 
-# Ideathon Bangladesh 2026 version
+# Crypto World's Fair — Colosseum
 
-## Positioning
+## Project name
 
-CommitLedger is an auditable work-verification and settlement-control product for organizations coordinating distributed contributor work.
+**CommitLedger**
 
-## Ideathon story
+## Public brief description
 
-Emphasize:
-- business problem;
-- target customers;
-- operational trust/audit value;
-- remote software-work and ecosystem-program use cases;
-- Bangladesh-relevant opportunity only where evidence supports it;
-- business model hypothesis;
-- adoption path;
-- team execution;
-- technical credibility from the verified MVP.
+CommitLedger is verifiable work-to-settlement infrastructure for open-source ecosystems and contributor programs. It binds canonical contribution evidence to role-authorized settlement state, blocks replay/duplicate settlement, and produces an auditable receipt.
 
-Do not invent local customers or traction.
+## What are you building, and who is it for?
 
-## Work still needed
+CommitLedger helps open-source maintainers, foundations, ecosystem programs and engineering organizations settle verified contributor work with explicit authorization and an audit trail. GitHub provides canonical issue/PR evidence. A verifier attests the evidence. Canton/Daml controls the allowed state transitions between maintainer, contributor and verifier and produces a replay-safe SettlementReceipt.
 
-- official live-rule recheck;
-- registration/application confirmation;
-- application fields;
-- business model;
-- market sizing;
-- validation evidence;
-- pitch materials;
-- final submission;
-- submission receipt.
+## Why build this now?
 
-## Final links
+Contributor programs increasingly coordinate valuable work across public repositories, but the evidence, approval and settlement steps are fragmented across code hosts, spreadsheets, chats and payment tools. CommitLedger focuses on the control layer between “the work merged” and “the work is authorized for settlement,” making the decision inspectable, role-aware and resistant to duplicate settlement.
 
-Populate only after each program's rules are re-verified:
-- Repository:
-- Live product/proof: https://commitledger-proof-final.onrender.com
-- Proof JSON: https://commitledger-proof-final.onrender.com/api/proof
-- Colosseum presentation:
-- Colosseum demo:
-- Colosseum submission receipt:
-- Ideathon pitch/application:
-- Ideathon submission receipt:
+## Technology
+
+- Daml / Canton for contractual workflow and authorization;
+- Canton JSON Ledger API for ledger transitions and active-contract discovery;
+- GitHub API for canonical issue and merged-PR evidence;
+- Node.js backend/orchestration;
+- browser judge UI;
+- Render for the current read-only public proof service.
+
+AI-assisted tooling was used for research, planning, review, tests, documentation and implementation support.
+
+## Business model hypothesis
+
+CommitLedger would be sold to organizations operating contributor, bounty or ecosystem programs. A practical model is a SaaS/platform fee for workflow, policy and audit controls, with enterprise pricing for organization-level access, integrations and compliance features. Production asset/payment adapters would be added only after workflow validation.
+
+## Go-to-market
+
+1. Start with one open-source repository and a small maintainer-led bounty pilot.
+2. Expand to a foundation/ecosystem contributor campaign.
+3. Add organization controls, monitoring and policy integrations.
+4. Add approved production settlement adapters after validation.
+
+## Demand validation
+
+Current proof is technical, not commercial traction. The project has a real end-to-end GitHub/Canton evidence fixture and executed runtime/security proof. Do not invent user interviews, pilots, revenue, wallet counts or customer demand. Add real validation only if actually collected before submission.
+
+## Pre-existing-work disclosure
+
+CommitLedger existed before the Crypto World's Fair contest window. The submission must disclose that history. Do not present the entire codebase as newly created during the contest. Identify competition-window work from Git history and describe only what was actually completed between the official start and end dates.
+
+## Presentation video
+
+Use `docs/COLOSSEUM_PITCH_SCRIPT.md`.
+
+## Product demo
+
+Use `docs/COLOSSEUM_DEMO_SCRIPT.md`.
+
+## Repository / links
+
+Repository: final judge-accessible CommitLedger URL.
+
+Live proof:
+https://commitledger-proof-final.onrender.com
+
+Proof JSON:
+https://commitledger-proof-final.onrender.com/api/proof
+
+## Final receipt fields
+
+Populate after actual portal actions:
+- HackCanton submission URL/receipt:
+- Colosseum project URL:
+- Colosseum submission confirmation:
+- Presentation video:
+- Demo video:
