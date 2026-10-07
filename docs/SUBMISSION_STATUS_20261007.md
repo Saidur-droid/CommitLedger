@@ -75,3 +75,18 @@ The uncertainty is external: a portal-only eligibility gate can override otherwi
 ## Do not change
 
 Do not rewrite core product code merely for a new submission. If executable code changes, rerun the full technical proof.
+
+
+## Colosseum technical re-verification — later on 7 October
+
+Connected Render evidence confirms the latest canonical deployment is **live** at commit `d582f3a008a5d0eb658b1c4bb0a4dd5007de6705`.
+
+The build executed the proof pipeline and recorded:
+- 88 Node tests;
+- Daml tests PASS;
+- final SettlementReceipt;
+- unauthorized settlement rejection;
+- duplicate settlement rejection;
+- `SUCCESS: VERIFIED EVIDENCE`.
+
+Accordingly, **product + technical proof = ready** for the Colosseum package. The remaining work is submission-side/account-side rather than core engineering.
