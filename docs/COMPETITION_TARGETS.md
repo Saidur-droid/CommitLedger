@@ -1,27 +1,19 @@
-# Competition Targets — 1 October 2026
+# Competition Targets — 7 October 2026
 
-**This is the canonical competition plan for CommitLedger.**
+**Canonical plan for the current CommitLedger sprint.**
 
-## Active submission targets
+The owner's 7 October instruction supersedes the 1 October planning note that had retired HackCanton.
 
-CommitLedger will now be prepared for exactly these two programs:
+## Active targets
 
-1. **Crypto World's Fair — Colosseum**
-2. **Ideathon Bangladesh 2026**
+1. **HackCanton Season 3**
+2. **Crypto World's Fair — Colosseum**
 
-These are the active targets. If a future session asks, “Which programs are we participating in?”, answer with these two unless this file is deliberately updated after a fresh rules/eligibility review.
+Ideathon Bangladesh 2026 is not part of this immediate CommitLedger submission sprint.
 
-## Retired target
+## Frozen technical baseline
 
-HackCanton Season 3 is **not an active submission target anymore** because the required AppsFactory account-registration/activity gates were not completed in time.
-
-Do not spend more time on HackCanton submission work.
-
-The Canton/Daml implementation and verified proof created during that effort remain valuable technical evidence and are preserved. Do not delete or rewrite that history.
-
-## Frozen technical proof
-
-The last fully executed, source-bound technical proof is frozen at:
+Last fully executed, source-bound technical proof:
 
 `26bd992787401f6458f6685d2ab76aacd05eab4e`
 
@@ -33,135 +25,157 @@ Proof endpoint:
 
 https://commitledger-proof-final.onrender.com/api/proof
 
-That proof includes:
+Verified on the frozen code commit:
 - Node 86/86 PASS;
-- DPM 3.5.12;
-- Daml build and Daml Script PASS;
-- a fresh Canton sandbox;
-- six real ledger transitions;
+- DPM 3.5.12 PASS;
+- Daml build PASS;
+- Daml Script tests PASS;
+- fresh Canton sandbox;
+- six ledger transitions;
 - SettlementReceipt;
-- wrong-issue rejection;
+- wrong-evidence rejection;
 - unauthorized-settlement rejection;
 - duplicate/replay rejection;
 - exact source-commit binding.
 
-Documentation-only commits made after the frozen proof do **not** become runtime-proven commits automatically. If executable code changes later, rerun the full proof on the new exact code commit.
-
-## Global rule before any new competition work
-
-**Eligibility first. Build second.**
-
-Before changing code for any event, verify and record:
-1. registration is still open;
-2. the owner is eligible by age/country/team rules;
-3. participation and submission do not require a paid product/service;
-4. pre-existing projects/code are allowed or can be disclosed;
-5. required build window and judging scope;
-6. required chain/stack/track;
-7. submission deadline and mandatory deliverables.
-
-If any mandatory gate is unknown, do not start engineering until it is resolved.
-
-**Owner constraint:** use free options only. Do not introduce paid tools/services unless the owner explicitly changes this rule.
+Planning/documentation commits after the frozen proof are not automatically runtime-proven. If executable code changes, rerun the full proof.
 
 ---
 
-# Target 1 — Crypto World's Fair — Colosseum
+# Target 1 — HackCanton Season 3
 
-## Current plan
+## Live-verified timing
 
-Treat CommitLedger as a startup/product submission, not as a HackCanton project.
+Current public schedule:
+- build phase: 18 Sep–9 Oct 2026;
+- submission deadline: **9 Oct 2026, 23:59 UTC**;
+- Bangladesh equivalent: **10 Oct 2026, 05:59**;
+- judging: 10–18 Oct;
+- finalists: 19 Oct;
+- Grand Final: 21 Oct, 14:00 UTC.
 
-Core product thesis:
+Primary sources/recheck pointers:
+- https://appsfactory.cc/hackathons
+- https://forum.canton.network/
+- current ecosystem schedule/article notes captured in `RULES_RECHECK_20261007.md`.
 
-> CommitLedger is verifiable work-to-settlement infrastructure for open-source ecosystems and contributor programs. It turns canonical contribution evidence into an authorization-controlled settlement workflow with replay protection and an auditable receipt.
+## Fit
 
-## What should stay
+CommitLedger is a strong Canton-native business-workflow submission because Daml/Canton controls the core authorization and settlement state:
 
-Keep the proven product core:
-- GitHub evidence verification;
-- role-separated authorization;
-- Canton/Daml state machine;
-- replay protection;
-- SettlementReceipt;
-- structured negative/security proof;
-- public read-only proof page.
+`Issue -> Bounty -> Claim -> PR -> Verify -> Settle -> SettlementReceipt`
 
-Do **not** rewrite the core merely to look different for Colosseum.
+Primary track candidate: **Real-World Asset & Business Workflows** because the product is an end-to-end role-authorized business workflow. Verify the actual portal track names before final selection.
 
-## What should improve for Colosseum
+## Technical status
 
-Primary work should be submission/business quality:
-- founder/market framing;
-- target-user clarity;
-- credible market size;
-- demand/user validation;
-- go-to-market plan;
-- concise presentation video;
-- concise product demo;
+**GREEN.** Product engineering and runtime proof are complete at the frozen proof commit.
+
+## Submission-side status
+
+Ready now:
+- product;
+- runtime proof;
+- security/negative proof;
+- architecture/business brief;
+- pitch text;
+- demo storyboard;
+- AI disclosure;
+- hackathon-work disclosure draft.
+
+Still external/manual:
+- AppsFactory login/registration state;
+- team/project profile state;
+- actual portal-required track and fields;
+- recorded final video;
+- repository judge access/public visibility;
+- final portal submission;
+- submission receipt.
+
+### Historical AppsFactory gate warning
+
+This repository previously modeled external gates named:
+- `mana1000`;
+- `activity10Days`;
+- `journalNonEmpty`;
+- `projectProfileComplete`;
+- `track1Selected`.
+
+These are **not being promoted here as universal public rules** because the live public site does not expose the full private participant checklist. Inspect the logged-in AppsFactory portal immediately. If any of these are mandatory and already unmet, do not misrepresent eligibility.
+
+---
+
+# Target 2 — Crypto World's Fair — Colosseum
+
+## Official timing
+
+Official rules state:
+- contest starts: **14 Sep 2026, 6:00 AM PT**;
+- contest ends / registration + submission cutoff: **12 Oct 2026, 11:59 PM PT**;
+- Bangladesh equivalent: **13 Oct 2026, 12:59**;
+- winners announced by 5 Dec 2026.
+
+Official page:
+https://colosseum.com/worldsfair
+
+Official rules:
+https://colosseum.com/legal/Crypto%20World%27s%20Fair%20Hackathon%20Rules.pdf
+
+## Eligibility/rules currently verified
+
+- no purchase necessary;
+- age of majority in country/residence or at least 18, whichever is older;
+- Bangladesh is not in the current listed excluded jurisdictions;
+- every member must register before the cutoff;
+- one entrant may be on only one team;
+- a team may submit one project at a time;
+- all submitted content must be in English;
+- judging includes functionality, potential impact, novelty, UX, open-source/composability, and business plan.
+
+Current Colosseum FAQ also states:
+- pre-existing code is allowed;
+- previous development must be disclosed;
+- judging focuses on work completed during the contest;
+- repository link is required (private allowed if review access is granted);
+- presentation video is requested;
+- product demo video is requested;
+- GTM, demand validation and distribution plan are requested.
+
+## Fit
+
+Submit CommitLedger as **verifiable work-to-settlement infrastructure for open-source ecosystems and contributor programs**.
+
+Do not force an ecosystem-track claim unless CommitLedger genuinely integrates the required chain. The general competition remains available across ecosystems.
+
+## Technical status
+
+**GREEN.** Reuse the frozen proven product; do not rewrite core code just to make it look new.
+
+## Competition-specific work still needed
+
+- Colosseum account/join confirmation;
+- project record in portal;
 - transparent pre-existing-work disclosure;
-- clear explanation of what was built during the competition window.
-
-Any competition-specific code change must be made on a separate branch and only after official rules are re-verified.
-
-## Current deadline note
-
-Current research recorded a submission deadline of **12 October 2026**.
-
-Before registration or final submission, re-open the official Colosseum rules and verify the live deadline, eligibility, deliverables, and pre-existing-code rules again. Do not rely on this repository note as a substitute for the live rules.
+- concise founder/market narrative;
+- demand validation that is real, not invented;
+- GTM/business model;
+- 2–3 minute presentation video;
+- <=3 minute product demo video;
+- repository review access;
+- final submission + receipt.
 
 ---
 
-# Target 2 — Ideathon Bangladesh 2026
+# Execution order — 7 October
 
-## Current plan
+1. **HackCanton portal check first** because its hard deadline is earlier.
+2. Resolve registration/profile/eligibility gates.
+3. Record and upload HackCanton final video.
+4. Ensure judge-accessible repo + proof links.
+5. Submit HackCanton and save receipt.
+6. Then complete Colosseum registration/project fields.
+7. Record Colosseum presentation + demo videos.
+8. Finalize pre-existing-work disclosure, GTM, validation and business model.
+9. Submit Colosseum and save receipt.
 
-Use the same CommitLedger core, but position it around business value and a credible adoption path.
-
-Suggested business framing:
-- auditable contributor/work settlement;
-- open-source and ecosystem bounty operations;
-- remote software-work verification;
-- organizations that need evidence-linked authorization before settlement.
-
-Do not fabricate Bangladeshi customers, revenue, pilots, or adoption.
-
-## What should stay
-
-No core-code rewrite is currently planned.
-
-Use the existing technical proof as product credibility, then strengthen:
-- problem statement;
-- customer segment;
-- Bangladesh-relevant business use cases where justified;
-- go-to-market;
-- pricing/business model hypothesis;
-- validation interviews/feedback;
-- pitch clarity.
-
-## Current deadline note
-
-Current research recorded a Round 1 deadline of **20 October 2026 at 11:59 PM Bangladesh time**.
-
-Before applying or submitting, re-verify the official live rules, deadline, team/eligibility requirements, and application fields.
-
----
-
-# Next-session order
-
-When work resumes:
-
-1. Read this file first.
-2. Re-verify **Colosseum** live rules and registration status.
-3. Register/apply first and retain confirmation evidence.
-4. Re-verify **Ideathon Bangladesh 2026** live rules and registration status.
-5. Register/apply first and retain confirmation evidence.
-6. Freeze the competition-specific requirements in repo docs.
-7. Build the Colosseum submission package.
-8. Build the Ideathon submission package.
-9. Only make product/code changes if a verified competition requirement or concrete product defect requires them.
-10. Never claim a submission is complete until the relevant portal provides confirmation/receipt.
-
-## Not doing today
-
-No product engineering, video production, portal submission, or competition-specific feature work is required on 1 October 2026 after this planning update.
+Owner constraint: use free tools/services unless explicitly changed.
