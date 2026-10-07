@@ -7,6 +7,7 @@ import {validateBountyDraft} from './domain.mjs';
 import * as builders from './canton-commands.mjs';
 import {CantonJsonApi} from './canton-json-api.mjs';
 import {runtimeConfigFromEnv,runFullLifecycle} from './orchestrator.mjs';
+import {buildEvidencePassport} from './evidence-passport.mjs';
 const projectRoot=fileURLToPath(new URL('../',import.meta.url));
 const root=resolve(projectRoot,'web');
 const evidenceRoot=resolve(projectRoot,'evidence');
@@ -57,6 +58,14 @@ export function createAppServer(env=process.env) {
           return json(res,200,{ok:true,proof,verification});
         } catch {
           return json(res,503,{error:'Verified deployment proof is not available'});
+        }
+      }
+      if(req.method==='GET' && url.pathname==='/api/passport') {
+        try {
+          const {proof}=await readVerifiedProof();
+          return json(res,200,{ok:true,passport:buildEvidencePassport(proof)});
+        } catch {
+          return json(res,503,{error:'Verified Evidence Passport is not available'});
         }
       }
       if(req.method==='GET' && url.pathname==='/api/health') {
