@@ -1,40 +1,46 @@
-# HackCanton Season 3 — Verified Rules Snapshot
+# Crypto World's Fair 2026 — Verified Rules Snapshot
 
-_Last verified: 2026-09-27._
+_Last verified: 2026-10-07._
 
-This file separates currently verified public event facts from CommitLedger's own internal quality gates.
+## Competition facts
 
-## Public event facts verified from current AppsFactory / Canton ecosystem materials
+- Organizer: Colosseum.
+- Contest: Crypto World's Fair 2026.
+- Contest period: September 14, 2026 at 6:00 AM PT through **October 12, 2026 at 11:59 PM PT**.
+- The competition is open to products across blockchain ecosystems.
+- Every team member must register before the deadline.
+- Solo founders are allowed.
+- One participant may join only one team; one team may submit only one project.
+- All submitted content must be in English.
+- Builders may begin development before the hackathon, but judging focuses on work completed during the contest; relevant pre-existing development must be disclosed.
+- Open-source repositories are encouraged. Private repositories are permitted if Colosseum is granted review access.
+- The platform expects a product description, team details, GitHub repository, product graphic, 2–3 minute pitch, <=3 minute technical demo, GTM, demand validation and distribution plan.
 
-- HackCanton Season 3 is an online Canton build program.
-- Builders may participate solo or as a team.
-- The build period runs through October 9, 2026.
-- Submission deadline: **October 9, 2026 at 23:59 UTC**.
-- Judging follows October 10–18, finalists are announced October 19, and the Grand Final is October 21.
-- The program is for products built on Canton and includes guided onboarding / shared development environment support.
-- Public materials describe up to $50K in cash + credits.
-- Builders may start with a new idea or an unfinished project.
-- Season 3 has multiple tracks, including an open category.
+## Judging signals
 
-## What is NOT treated as a verified mandatory rule
+### Official rules
+- Functionality
+- Potential impact
+- Novelty
+- UX
+- Open-source / composability
+- Business plan / ability to execute
 
-Unless the organizer's private/formal submission portal explicitly requires it, CommitLedger does **not** assume that the following are mandatory:
-- real external users;
-- paid hosting;
-- Canton Coin purchase;
-- mainnet deployment;
-- external traction;
-- production custody;
-- a token launch.
+### Colosseum platform FAQ
+- Founder + market fit
+- Insight
+- Product + execution
+- Potential market size
+- Founder communication
+- Viability
+- Traction, when present
 
-## Compliance policy
+## CommitLedger competition positioning
 
-If the official AppsFactory portal, participant agreement, track rules, or submission form provides requirements that conflict with this repository, those official requirements immediately override this file.
+CommitLedger uses **Canton + Daml + GitHub** and should be entered as a general-pool product. Do not claim eligibility for a dedicated ecosystem track unless the implementation is actually extended to that ecosystem before submission.
 
-Before final submission, manually compare the portal/rulebook against:
-- `LOCKED_DECISIONS.md`;
-- `docs/COMPETITION_COMPLIANCE.md`;
-- this file;
-- the final demo and submission text.
+## Official references
 
-No unchecked assumption may be presented as an organizer rule.
+- https://colosseum.com/worldsfair
+- https://colosseum.com/hackathon?year=fall2026
+- https://colosseum.com/legal/Crypto%20World%27s%20Fair%20Hackathon%20Rules.pdf
